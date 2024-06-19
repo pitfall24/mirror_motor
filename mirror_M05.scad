@@ -65,7 +65,7 @@ module mirror_model(incidence = false, path = false) {
 }
 
 module import_mirror(convexity = 3) {
-    import("/home/quanta/Documents/phineas/mirror_motor/M05_centered.stl", convexity = convexity);
+    import("./M05_centered.stl", convexity = convexity);
 }
 
 //translate([0, 1, 0]) mounter();
