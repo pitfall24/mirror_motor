@@ -4,6 +4,7 @@
 
 use<mirror_M05.scad>;
 use<mechanism.scad>;
+use<util.scad>;
 
 $fs = 0.01;
 $fn = 100;
@@ -114,14 +115,34 @@ module mount() {
 }
 
 module mechanism_mount() {
-    
+    difference() {
+        union() {
+            translate([9, -20.5, 0]) cube([8, 20, 5]);
+            translate([16.5, -4, 0]) cube([3, 3.5, 5]);
+            translate([9, -20.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5);
+            translate([9, -4.7, 0]) beveled_cube([16.5, 1.4, 8], [0, 1, 0], 0.5); // adjust this thickness
+            
+            translate([18, -23, 3]) beveled_cube([3, 4, 10], [1, 1, 1], 0.5);
+        }
+        
+        // difference operations between such complicated meshes is quite expensive
+        //mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+    }
 }
 
 import_mirror(convexity = 1);
 mount();
 
 mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
-mechanism_mount();
+color("plum") mechanism_mount();
+
+
+
+
+
+
+
+
 
 
 
