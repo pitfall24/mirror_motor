@@ -120,7 +120,7 @@ module mechanism_mount() {
 import_mirror(convexity = 1);
 mount();
 
-mechanism(3d_print = true, hex_bores = true); // might modify this for different gears. need some way to adapt from hex to round
+mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
 mechanism_mount();
 
 

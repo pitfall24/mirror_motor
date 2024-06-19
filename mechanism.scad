@@ -9,10 +9,16 @@ use<gears.scad>;
 $fn = 64;
 
 hex_ratio = 2 / sqrt(3);
+tol_box_tolerance = 0.2;
 
-module axles() {
-    translate([3.556, 1, 21.85]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 12, $fn = 6);
-    translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 20, $fn = 6);
+module axles(tol_boxes = false) {
+    translate([3.556, 1, 21.85]) rotate([90, -12.5, 0]) {
+        color("gray") cylinder(d = 2 * hex_ratio, h = 12, $fn = 6);
+        if (tol_boxes) color("orange") translate([0, 0, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 12 + tol_box_tolerance);
+    }
+    
+    color("gray") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 20, $fn = 6);
+    if (tol_boxes) color("orange") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 20 + tol_box_tolerance);
 }
 
 module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
@@ -50,13 +56,23 @@ module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
 }
 
 module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
-    color("gray") axles();
+    axles(tol_boxes = tol_boxes);
     color("gray") translate([21.85, -11.635, 5]) cylinder(d = 2, h = 11, $fn = hex_bores ? 6 : $fn);
+    if (tol_boxes) color("orange") translate([21.85, -11.635, 5]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 11 + tol_box_tolerance);
     
     // bottom-right gear train
     translate([21.85, -8, 3.556]) {
         rotate([90, 90, 0]) bevel_gears(hex_bore = hex_bores, set_screw = !3d_print);
+        color("orange") if (tol_boxes) {
+            translate([0, 3 + tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
+            translate([0, -3.635, 1.635]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
+        }
         translate([0, -3.635, 6.7]) {
+            color("orange") if (tol_boxes) {
+                translate([0, 0, -tol_box_tolerance / 2]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+                translate([-7.1, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+            }
+            
             difference() {
                 if (3d_print) {
                     // use custom gears which will fit better
@@ -78,6 +94,11 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     
     // top-left gear train
     translate([3.556, -5, 21.85]) {
+        color("orange") if (tol_boxes) {
+            translate([0, tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+            translate([0, 0, -7.1]) rotate([90, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+        }
+        
         rotate([90, 0, 0]) difference() {
             if (3d_print) {
                 spur_gear(modul = 12 / 39, tooth_number = 39, width = 2, bore = 2, optimized = false);
@@ -120,7 +141,7 @@ module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, i
 }
 
 translate([0, /*4*/0, 0]) {
-    mechanism(3d_print = true, hex_bores = true);
+    mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
     import_mirror();
 }
 
