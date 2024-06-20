@@ -117,12 +117,27 @@ module mount() {
 module mechanism_mount() {
     difference() {
         union() {
-            translate([9, -20.5, 0]) cube([8, 20, 5]);
-            translate([16.5, -4, 0]) cube([3, 3.5, 5]);
-            translate([9, -20.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5);
-            translate([9, -4.7, 0]) beveled_cube([16.5, 1.4, 8], [0, 1, 0], 0.5); // adjust this thickness
+            translate([9, -23.5, 0]) cube([8, 23, 5]); // main lower brace
+            translate([16.5, -4.5, 0]) cube([3, 4, 5]); // minor lower brace
+            translate([9, -23.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5); // outer bottom-left axle brace
+            translate([9, -7.7, 0]) beveled_cube([16.5, 3.5, 8], [0, 1, 0], 0.5); // adjust this thickness, inner brace
             
-            translate([18, -23, 3]) beveled_cube([3, 4, 10], [1, 1, 1], 0.5);
+            // bottom-left large gear bracing
+            translate([21.85, -14.635, 8.15]) difference() {
+                cylinder(d = 11, h = 2);
+                translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
+            }
+            
+            // lower supports
+            translate([19.85, -21, 7]) cube([4, 2.2, 3]);
+            translate([16.85, -10.2, 7.5]) cube([7, 4.5, 2.5]);
+            translate([15.5, -16.5, 0]) cube([2, 4, 10]);
+            
+            // upper stops
+            translate([19, -26, 3]) beveled_cube([6, 4, 12], [1, 0, 1], 0.5);
+            translate([19, -7.7, 5]) beveled_cube([6, 3.5, 10], [1, 0, 1], 0.5);
+            translate([19, -24, 13]) cube([6, 18, 2]);
+            translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
         }
         
         // difference operations between such complicated meshes is quite expensive
@@ -131,9 +146,9 @@ module mechanism_mount() {
 }
 
 import_mirror(convexity = 1);
-mount();
+_render("red") mount();
 
-mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+_render("orange") mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
 color("plum") mechanism_mount();
 
 

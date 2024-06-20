@@ -13,12 +13,12 @@ tol_box_tolerance = 0.2;
 
 module axles(tol_boxes = false) {
     translate([3.556, 1, 21.85]) rotate([90, -12.5, 0]) {
-        color("gray") cylinder(d = 2 * hex_ratio, h = 12, $fn = 6);
-        if (tol_boxes) color("orange") translate([0, 0, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 12 + tol_box_tolerance);
+        color("gray") cylinder(d = 2 * hex_ratio, h = 15, $fn = 6);
+        if (tol_boxes) color("orange") translate([0, 0, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 15 + tol_box_tolerance);
     }
     
-    color("gray") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 20, $fn = 6);
-    if (tol_boxes) color("orange") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 20 + tol_box_tolerance);
+    color("gray") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 23, $fn = 6);
+    if (tol_boxes) color("orange") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 23 + tol_box_tolerance);
 }
 
 module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
@@ -57,11 +57,11 @@ module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
 
 module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     axles(tol_boxes = tol_boxes);
-    color("gray") translate([21.85, -11.635, 5]) cylinder(d = 2, h = 11, $fn = hex_bores ? 6 : $fn);
-    if (tol_boxes) color("orange") translate([21.85, -11.635, 5]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 11 + tol_box_tolerance);
+    color("gray") translate([21.85, -14.635, 5]) cylinder(d = 2, h = 11, $fn = hex_bores ? 6 : $fn);
+    if (tol_boxes) color("orange") translate([21.85, -14.635, 5]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 11 + tol_box_tolerance);
     
     // bottom-right gear train
-    translate([21.85, -8, 3.556]) {
+    translate([21.85, -11, 3.556]) {
         rotate([90, 90, 0]) bevel_gears(hex_bore = hex_bores, set_screw = !3d_print);
         color("orange") if (tol_boxes) {
             translate([0, 3 + tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
@@ -93,7 +93,7 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     }
     
     // top-left gear train
-    translate([3.556, -5, 21.85]) {
+    translate([3.556, -8, 21.85]) {
         color("orange") if (tol_boxes) {
             translate([0, tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
             translate([0, 0, -7.1]) rotate([90, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 2 + tol_box_tolerance);
@@ -145,8 +145,9 @@ translate([0, /*4*/0, 0]) {
     import_mirror();
 }
 
+
+//parts_to_print();
 /*
-parts_to_print();
 translate([30, 0, 0]) parts_to_print(hex_bore = false, include_miter = true);
 translate([0, 15, 0]) parts_to_print(hex_bore = true, custom_gears = false, include_miter = false);
 translate([30, 15, 0]) parts_to_print(hex_bore = false, custom_gears = false, include_miter = false, set_screw=false);
