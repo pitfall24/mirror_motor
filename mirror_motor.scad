@@ -110,50 +110,102 @@ module mount() {
     
     color("blue") difference() {
         plate();
-        adjustment_pins();
+        union() {
+            adjustment_pins();
+            translate([19.35, -4, 0]) cube([2, 4, 3.5]);
+        }
+    }
+}
+
+module motor_holder(outer_dia = 10) {
+    color("steelblue") {
+        translate([0, 0, -1.5]) cylinder(d = outer_dia, h = 1.5);
+        difference() {
+            cylinder(d = outer_dia, h = 3.4);
+            
+            union() {
+                translate([0, 0, 1.9]) cube([3, 25, 4], center = true);
+                translate([-1, -7, 4]) rotate([0, 0, 55]) cube([3, 6, 5]);
+            }
+        }
+        
+        for (i = [0, 1]) mirror([0, i, 0]) {
+            difference() {
+                union() {
+                    translate([-1, -5.6, -1.4]) cube([2, 1, 12.5]);
+                    translate([-1, -5.6, 8.35]) cube([2, 2.5, 0.67]);
+                    translate([-1, -3.91915, 8.4464]) rotate([35, 0, 0]) cube([2, 1, 3]);
+                    translate([-1, -5, 8.5]) cube([2, 1, 1]);
+                }
+                translate([-1.05, -7, 10]) rotate([-35, 0, 0]) cube([2.1, 1, 3]);
+            }
+        }
     }
 }
 
 module mechanism_mount() {
     difference() {
         union() {
-            translate([9, -23.5, 0]) cube([8, 23, 5]); // main lower brace
-            translate([16.5, -4.5, 0]) cube([3, 4, 5]); // minor lower brace
-            translate([9, -23.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5); // outer bottom-left axle brace
-            translate([9, -7.7, 0]) beveled_cube([16.5, 3.5, 8], [0, 1, 0], 0.5); // adjust this thickness, inner brace
-            
-            // bottom-left large gear bracing
-            translate([21.85, -14.635, 8.15]) difference() {
-                cylinder(d = 11, h = 2);
-                translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
+            color("plum") {
+                translate([9, -23.5, 0]) cube([8, 23, 5]); // main lower brace
+                translate([16.5, -4.5, 0]) cube([2.8, 4, 5]); // minor lower brace
+                translate([9, -23.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5); // outer bottom-right axle brace
+                translate([9, -7.7, 0]) beveled_cube([16.5, 3.5, 8], [0, 1, 0], 0.5); // adjust this thickness, inner brace
             }
             
-            // lower supports
-            translate([19.85, -21, 7]) cube([4, 2.2, 3]);
-            translate([16.85, -10.2, 7.5]) cube([7, 4.5, 2.5]);
-            translate([15.5, -16.5, 0]) cube([2, 4, 10]);
+            // bottom-right large gear bracing
+            color("peru") {
+                translate([21.85, -14.635, 8.15]) difference() {
+                    cylinder(d = 11, h = 2);
+                    translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
+                }
+                
+                // bottom-right lower supports
+                translate([19.85, -21, 7]) cube([4, 2.2, 3]);
+                translate([16.85, -10.2, 7.5]) cube([7, 4.5, 2.5]);
+                translate([15.5, -16.5, 0]) cube([2, 4, 10]);
             
-            // upper stops
-            translate([19, -26, 3]) beveled_cube([6, 4, 12], [1, 0, 1], 0.5);
-            translate([19, -7.7, 5]) beveled_cube([6, 3.5, 10], [1, 0, 1], 0.5);
-            translate([19, -24, 13]) cube([6, 18, 2]);
-            translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
+                // bottom-right upper stops
+                translate([19, -26, 3]) beveled_cube([6, 4, 12], [1, 0, 1], 0.5);
+                translate([19, -7.7, 5]) beveled_cube([6, 3.5, 10], [1, 0, 1], 0.5);
+                translate([19, -24, 13]) cube([6, 18, 2]);
+                translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
+            }
+            
+            color("plum") translate([-0.9, -16, 0]) cube([10, 15.5, 5]); // left side main brace
+            
+            color("peru") {
+                // left axle supports
+                translate([0, -7.7, 15]) beveled_cube([7, 3.5, 10], [0, 1, 0], 0.5);
+                translate([0, -7.7, 10]) cube([7, 6, 9]);
+                translate([1, -11, 9.5]) cube([5, 4, 3]);
+                translate([1, -15.4, 19.3]) beveled_cube([5, 5, 5], [0, 1, 0], 0.5); // needs to be supported
+            }
+            
+            translate([14.75, -14.635, 14.256]) motor_holder(); // right motor mount, rotation might be an issue, check?
+            translate([3.556, -12, 14.85]) rotate([90, 90, 0]) motor_holder(outer_dia = 11); // left motor mount
+            
+            color("peru") difference() {
+                translate([0.3, -15, 4.9]) cube([6, 4, 7]);
+                translate([3.3, -15.5, 15.5]) rotate([-90, 0, 0]) cylinder(d = 11, h = 5);
+            }
         }
         
         // difference operations between such complicated meshes is quite expensive
-        //mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+        mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
     }
 }
 
-import_mirror(convexity = 1);
+//import_mirror(convexity = 1);
 _render("red") mount();
 
-_render("orange") mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
-color("plum") mechanism_mount();
+//_render("orange") mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+mechanism_mount();
 
+// translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]);
 
-
-
+// design some parts to test the tolerances of the printer in terms of screw holes,
+// axle-holding holes, and motors?
 
 
 

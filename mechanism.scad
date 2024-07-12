@@ -70,7 +70,7 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
         translate([0, -3.635, 6.7]) {
             color("orange") if (tol_boxes) {
                 translate([0, 0, -tol_box_tolerance / 2]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
-                translate([-7.1, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+                translate([-7.1, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 1.5 + tol_box_tolerance);
             }
             
             difference() {
@@ -85,9 +85,9 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
                 }
             }
             if (3d_print) {
-                translate([-7.1, 0, 12.3]) rotate([180, 0, 90]) mini_stepper();
+                translate([-7.1, 0, 12.3]) rotate([180, 0, 90]) mini_stepper(tol_boxes = tol_boxes);
             } else {
-                translate([-5, 0, 14.3]) rotate([180, 0, 90]) mini_stepper();
+                translate([-5, 0, 14.3]) rotate([180, 0, 90]) mini_stepper(tol_boxes = tol_boxes);
             }
         }
     }
@@ -96,7 +96,7 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     translate([3.556, -8, 21.85]) {
         color("orange") if (tol_boxes) {
             translate([0, tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
-            translate([0, 0, -7.1]) rotate([90, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 2 + tol_box_tolerance);
+            translate([0, 0, -7.1]) rotate([90, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 1.5 + tol_box_tolerance);
         }
         
         rotate([90, 0, 0]) difference() {
@@ -110,9 +110,9 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
             }
         }
         if (3d_print) {
-            translate([0, -12.3, -7.1]) rotate([-90, 0, 0]) mini_stepper();
+            translate([0, -12.3, -7.1]) rotate([-90, 0, 0]) mini_stepper(tol_boxes = tol_boxes);
         } else {
-            translate([0, -14.3, -5]) rotate([-90, 0, 0]) mini_stepper();
+            translate([0, -14.3, -5]) rotate([-90, 0, 0]) mini_stepper(tol_boxes = tol_boxes);
         }
     }
 }
@@ -140,15 +140,14 @@ module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, i
     }
 }
 
-translate([0, /*4*/0, 0]) {
+translate([0, 0, 0]) {
     mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
     import_mirror();
 }
 
-
 //parts_to_print();
 /*
-translate([30, 0, 0]) parts_to_print(hex_bore = false, include_miter = true);
+translate([30, 0, 0]) parts_to_print(hex_bore = true, include_miter = true);
 translate([0, 15, 0]) parts_to_print(hex_bore = true, custom_gears = false, include_miter = false);
 translate([30, 15, 0]) parts_to_print(hex_bore = false, custom_gears = false, include_miter = false, set_screw=false);
 */

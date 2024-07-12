@@ -7,27 +7,29 @@ $fs = 0.1;
 
 use<gears.scad>;
 
-module mini_stepper() {
+module mini_stepper(tol_boxes = false) {
     color("silver") difference() {
         union() {
-            cylinder(d = 8, h = 8.2);
-            translate([3.2, 0, 7.2]) cylinder(d = 3, h = 1);
-            translate([-3.2, 0, 7.2]) cylinder(d = 3, h = 1);
+            cylinder(d = 8, h = 8.3);
+            translate([0, 0, 3.35]) cylinder(d = 8.36, h = 1.3);
+            translate([3.2, 0, 7.3]) cylinder(d = 2.54, h = 1);
+            translate([-3.2, 0, 7.3]) cylinder(d = 2.54, h = 1);
         }
         
-        union() {
+        if (!tol_boxes) union() {
             translate([3, 0, 6]) cylinder(d = 1, h = 3);
             translate([-3, 0, 6]) cylinder(d = 1, h = 3);
+            translate([0, -3, 6]) cylinder(d = 1, h = 3);
         }
     }
     
-    translate([0, 0, 8.2]) {
-        cylinder(d = 4, h = 0.8);
+    translate([0, 0, 8.3]) {
+        translate([0, 0, -0.05]) cylinder(d = 4, h = 1.65); // height is 1mm too high for tolerance
         color("silver") cylinder(d = 1.5, h = 3.99);
-        translate([0, 0, 4 - 1.8]) spur_gear(modul = 2.2 / 9, tooth_number = 9, width = 1.8, bore = 0.8, optimized = false);
+        translate([0, 0, 4 - 1.5]) spur_gear(modul = 2.235 / 9, tooth_number = 9, width = 1.5, bore = 0.8, optimized = false);
     }
     
-    color("green") rotate([0, 0, 35]) translate([-5, 0, 2]) cube([2.5, 5, 4], center = true);
+    color("green") if (!tol_boxes) rotate([0, 0, 35]) translate([-5, 0, 2]) cube([2.5, 5, 4], center = true);
 }
 
 mini_stepper();
