@@ -61,16 +61,16 @@ module mount() {
       
     module inner_slot() {
         translate([3.556, 0, 8.51]) rotate([-90, 0, 0]) {
-            translate([0, 0, -protrusion_dist]) cylinder(h = 3.2, d = 3.4);
-            translate([0, -8.39, -protrusion_dist]) cylinder(h = 3.2, d = 3.4);
+            translate([0, 0, -protrusion_dist]) cylinder(h = 3, d = 3.4);
+            translate([0, -8.39, -protrusion_dist]) cylinder(h = 3, d = 3.4);
         }
-        translate([3.556, -0.4, inch / 2]) cube([1.65, 3.2, 0.515 * inch], center = true);
+        translate([3.556, -0.5, inch / 2]) cube([1.65, 3, 0.515 * inch], center = true);
     }
     
     module inner_walls() {
         difference() {
-            translate([8.8625, 4, inch / 2]) cube([6.075, 12, inch / 3], center = true);
-            translate([6, -3, 6]) rotate([0, -15, 0]) cube([8, 14, 2]);
+            translate([9.8625, 4, inch / 2]) cube([8.075, 12, inch / 3], center = true);
+            translate([6, -3, 6]) rotate([0, -15, 0]) cube([10, 14, 2]);
         }
         
         difference() {
@@ -106,7 +106,7 @@ module mount() {
             outer_walls();
         }
         
-        securing_bolt_pos() securing_bolt();
+        securing_bolt_pos() securing_bolt(dia_tol = -0.25);
     }
     
     color("blue") difference() {
@@ -125,20 +125,20 @@ module motor_holder(outer_dia = 10) {
             cylinder(d = outer_dia, h = 3.4);
             
             union() {
-                translate([0, 0, 1.9]) cube([3, 25, 4], center = true);
+                translate([0, 0, 1.9]) cube([4, 25, 4], center = true);
                 translate([-1, -7, 4]) rotate([0, 0, 55]) cube([3, 6, 5]);
             }
         }
         
         for (i = [0, 1]) mirror([0, i, 0]) {
-            difference() {
+            translate([0, 0, -0.35]) rotate([-3.5, 0, 0]) difference() {
                 union() {
-                    translate([-1, -5.6, -1.4]) cube([2, 1, 12.5]);
-                    translate([-1, -5.6, 8.35]) cube([2, 2.5, 0.67]);
-                    translate([-1, -3.91915, 8.4464]) rotate([35, 0, 0]) cube([2, 1, 3]);
-                    translate([-1, -5, 8.5]) cube([2, 1, 1]);
+                    translate([-1.5, -6.1, -1.4]) cube([3, 1.5, 12.5]);
+                    translate([-1.5, -5.6, 8.35]) cube([3, 2.5, 0.67]);
+                    translate([-1.5, -3.91915, 8.4464]) rotate([35, 0, 0]) cube([3, 1, 3]);
+                    translate([-1.5, -5, 8.5]) cube([3, 1, 1]);
                 }
-                translate([-1.05, -7, 10]) rotate([-35, 0, 0]) cube([2.1, 1, 3]);
+                translate([-1.55, -7, 10]) rotate([-35, 0, 0]) cube([3.1, 1, 3]);
             }
         }
     }
@@ -158,7 +158,10 @@ module mechanism_mount() {
             color("peru") {
                 translate([21.85, -14.635, 8.15]) difference() {
                     cylinder(d = 11, h = 2);
-                    translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
+                    union() {
+                        translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
+                        translate([5, 0, 0]) rotate([0, 0, 45]) cube([6, 6, 4.5], center = true);
+                    }
                 }
                 
                 // bottom-right lower supports
@@ -173,43 +176,52 @@ module mechanism_mount() {
                 translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
             }
             
-            color("plum") translate([-0.9, -16, 0]) cube([10, 15.5, 5]); // left side main brace
+            color("plum") translate([-0.9, -19, 0]) cube([10, 18.5, 5]); // left side main brace
             
             color("peru") {
                 // left axle supports
-                translate([0, -7.7, 15]) beveled_cube([7, 3.5, 10], [0, 1, 0], 0.5);
-                translate([0, -7.7, 10]) cube([7, 6, 9]);
-                translate([1, -11, 9.5]) cube([5, 4, 3]);
-                translate([1, -15.4, 19.3]) beveled_cube([5, 5, 5], [0, 1, 0], 0.5); // needs to be supported
+                translate([0, -7.9, 15]) beveled_cube([7, 3.7, 10], [0, 1, 0], 0.5);
+                translate([0, -7.9, 10]) cube([7, 6.2, 9]);
+                translate([1, -14, 9.5]) cube([5, 7, 3]);
+                translate([1, -18.3, 19.3]) beveled_cube([5, 5, 5], [0, 1, 0], 0.5); // needs to be supported // TODO
             }
             
-            translate([14.75, -14.635, 14.256]) motor_holder(); // right motor mount, rotation might be an issue, check?
-            translate([3.556, -12, 14.85]) rotate([90, 90, 0]) motor_holder(outer_dia = 11); // left motor mount
+            difference() {
+                translate([14.75, -14.635, 14.256]) motor_holder(outer_dia = 12); // right motor mount
+                translate([22, -14.635, 15]) cube([5, 5.9, 3.9], center = true);
+            }
+            
+            translate([3.556, -15, 14.85]) rotate([90, 135, 0]) motor_holder(outer_dia = 11.5); // left motor mount
             
             color("peru") difference() {
-                translate([0.3, -15, 4.9]) cube([6, 4, 7]);
-                translate([3.3, -15.5, 15.5]) rotate([-90, 0, 0]) cylinder(d = 11, h = 5);
+                translate([0.3, -18, 4.9]) cube([6, 4, 7]);
+                union() {
+                    translate([3.3, -18.5, 15]) rotate([-90, 0, 0]) cylinder(d = 11, h = 5);
+                    translate([4.57756, -18.5, 11]) rotate([0, 45, 0]) cube([3, 5, 3]);
+                }
             }
+            
+            color("peru") translate([10, -16.2, 4.9]) cube([2, 3, 8]);
         }
         
         // difference operations between such complicated meshes is quite expensive
-        mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+        //mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
     }
 }
 
 module motor_holder_print() {
     difference() {
-        motor_holder();
+        motor_holder(outer_dia = 11);
         translate([0, 0, 8.3]) rotate([180, 0, 90]) mini_stepper(tol_boxes = true);
     }
 }
 
 module screw_test_print() {
     difference() {
-        cube([8, 38, 8]);
+        cube([8, 56, 8]);
         
-        dict = [[4, 0], [10, 0.05], [16, 0.1], [22, 0.15], [28, 0.2], [34, 0.25]];
-        for (i = [4, 10, 16, 22, 28, 34]) {
+        dict = [[4, 0], [10, -0.05], [16, -0.1], [22, -0.15], [28, -0.2], [34, -0.25], [40, -0.3], [46, -0.35], [52, -0.4]];
+        for (i = [4, 10, 16, 22, 28, 34, 40, 46, 52]) {
             tol = dict[search(i, dict)[0]][1];
             
             translate([4, i, 8.05]) rotate([0, 90, 0]) securing_bolt(dia_tol = tol, head_tol = 1);
@@ -233,15 +245,18 @@ module axle_tol_print() {
 }
 
 import_mirror(convexity = 1);
-//_render("red") mount();
+_render("red") mount();
 
-//_render("orange") mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
-//mechanism_mount();
+/*_render("orange")*/ mechanism(3d_print = true, hex_bores = true, tol_boxes = false);
+mechanism_mount();
 
 // translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
 
-// design some parts to test the tolerances of the printer in terms of screw holes,
-// axle-holding holes, and motors?
+
+
+
+
+
 
 
 

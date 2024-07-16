@@ -13,15 +13,15 @@ tol_box_tolerance = 0.2;
 
 module axles(tol_boxes = false, tol = tol_box_tolerance / 2) {
     translate([3.556, 1, 21.85]) rotate([90, -12.5, 0]) {
-        color("gray") cylinder(d = 2 * hex_ratio, h = 15, $fn = 6);
-        if (tol_boxes) color("orange") translate([0, - tol, 0]) cylinder(d = 2 * hex_ratio + 2 * tol, h = 15 + 2 * tol);
+        color("gray") cylinder(d = 2 * hex_ratio, h = 18, $fn = 6);
+        if (tol_boxes) color("orange") translate([0, - tol, 0]) cylinder(d = 2 * hex_ratio + 2 * tol, h = 18 + 2 * tol);
     }
     
     color("gray") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 23, $fn = 6);
     if (tol_boxes) color("orange") translate([21.85, 1, 3.556 - tol]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + 2 * tol, h = 23 + 2 * tol);
 }
 
-module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
+module bevel_gears(singular = false, hex_bore = false, set_screw = true, axle_tol = 0) {
     difference() {
         if (singular) {
             bevel_gear(modul = 0.5, tooth_number = 13, partial_cone_angle = 45, tooth_width = 2, bore = hex_bore ? 1.5 : 2);
@@ -30,16 +30,16 @@ module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
         }
         if (hex_bore) {
             if (!singular) {
-                translate([-4, 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * hex_ratio, h = 3, $fn = 6);
+                translate([-4, 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * hex_ratio + axle_tol, h = 3, $fn = 6);
             }
-            translate([0, 0, -1]) cylinder(d = 2 * hex_ratio, h = 3, $fn = 6);
+            translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 3, $fn = 6);
         }
     }
     
     difference() {
         translate([0, 0, -3]) cylinder(d = 5, h = 3);
         union() {
-            translate([0, 0, -3.1]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1), h = 5, $fn = hex_bore ? 6 : $fn);
+            translate([0, 0, -3.1]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1) + axle_tol, h = 5, $fn = hex_bore ? 6 : $fn);
             if (set_screw) translate([0, 0, -1.5]) rotate([90, 0, 0]) cylinder(d = 2 /*1.588*/, h = 3);
         }
     }
@@ -48,21 +48,21 @@ module bevel_gears(singular = false, hex_bore = false, set_screw = true) {
         difference() {
             translate([-(3 + 3.635), 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 5, h = 3);
             union() {
-                translate([-(3.1 + 3.635), 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1), h = 5, $fn = hex_bore ? 6 : $fn);
+                translate([-(3.1 + 3.635), 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1) + axle_tol, h = 5, $fn = hex_bore ? 6 : $fn);
                 if (set_screw) translate([-(1.5 + 3.635), 0, 3.635]) rotate([90, 0, 0]) cylinder(d = 2 /*1.588*/, h = 3);
             }
         }
     }
 }
 
-module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
+module mechanism(3d_print = false, hex_bores = false, tol_boxes = false, axle_tol = 0) {
     axles(tol_boxes = tol_boxes);
     color("gray") translate([21.85, -14.635, 5]) cylinder(d = 2, h = 11, $fn = hex_bores ? 6 : $fn);
     if (tol_boxes) color("orange") translate([21.85, -14.635, 5]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 11 + tol_box_tolerance);
     
     // bottom-right gear train
     translate([21.85, -11, 3.556]) {
-        rotate([90, 90, 0]) bevel_gears(hex_bore = hex_bores, set_screw = !3d_print);
+        rotate([90, 90, 0]) bevel_gears(hex_bore = hex_bores, set_screw = !3d_print, axle_tol = axle_tol);
         color("orange") if (tol_boxes) {
             translate([0, 3 + tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
             translate([0, -3.635, 1.635]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
@@ -76,12 +76,12 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
             difference() {
                 if (3d_print) {
                     // use custom gears which will fit better
-                    spur_gear(modul = 12 / 39, tooth_number = 39, width = 2, bore = 2, optimized = false);
+                    spur_gear(modul = 12 / 39, tooth_number = 39, width = 2, bore = 2 + axle_tol, optimized = false);
                 } else {
-                    spur_gear(modul = 8 / 29, tooth_number = 29, width = 4, bore = 2);
+                    spur_gear(modul = 8 / 29, tooth_number = 29, width = 4, bore = 2 + axle_tol);
                 }
                 if (hex_bores) {
-                    translate([0, 0, -1]) cylinder(d = 2 * hex_ratio, h = 6, $fn = 6);
+                    translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 6, $fn = 6);
                 }
             }
             if (3d_print) {
@@ -93,20 +93,24 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     }
     
     // top-left gear train
-    translate([3.556, -8, 21.85]) {
+    translate([3.556, -11, 21.85]) {
         color("orange") if (tol_boxes) {
             translate([0, tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 12.8 + tol_box_tolerance, h = 2 + tol_box_tolerance);
             translate([0, 0, -7.1]) rotate([90, 0, 0]) cylinder(d = 2.75 + tol_box_tolerance, h = 1.5 + tol_box_tolerance);
         }
         
         rotate([90, 0, 0]) difference() {
-            if (3d_print) {
-                spur_gear(modul = 12 / 39, tooth_number = 39, width = 2, bore = 2, optimized = false);
-            } else {
-                spur_gear(modul = 8 / 29, tooth_number = 29, width = 4, bore = 2);
+            union() {
+                if (3d_print) {
+                    spur_gear(modul = 12 / 39, tooth_number = 39, width = 2, bore = 2 + axle_tol, optimized = false);
+                } else {
+                    spur_gear(modul = 8 / 29, tooth_number = 29, width = 4, bore = 2 + axle_tol);
+                }
+                
+                translate([0, 0, -3]) cylinder(d = 5, h = 3.05);
             }
             if (hex_bores) {
-                translate([0, 0, -1]) cylinder(d = 2 * hex_ratio, h = 6, $fn = 6);
+                translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 6, $fn = 6);
             }
         }
         if (3d_print) {
@@ -117,11 +121,11 @@ module mechanism(3d_print = false, hex_bores = false, tol_boxes = false) {
     }
 }
 
-module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, include_miter = true) {
+module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, include_miter = true, axle_tol = 0) {
     // miter gears
     if (include_miter) {
-        translate([0, 0, 3]) bevel_gears(singular = true, hex_bore = hex_bore, set_screw = set_screw);
-        translate([15, 0, 3]) bevel_gears(singular = true, hex_bore = hex_bore, set_screw = set_screw);
+        translate([0, 0, 3]) bevel_gears(singular = true, hex_bore = hex_bore, set_screw = set_screw, axle_tol = axle_tol);
+        translate([15, 0, 4.99]) bevel_gears(singular = true, hex_bore = hex_bore, set_screw = set_screw, axle_tol = axle_tol);
     }
     
     mod = custom_gears ? 12 / 39 : 8 / 29;
@@ -130,22 +134,24 @@ module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, i
     
     difference() {
         union() {
-            translate([0, 15, 0]) spur_gear(modul = mod, tooth_number = num, width = wid, bore = 2, optimized = false);
-            translate([15, 15, 0]) spur_gear(modul = mod, tooth_number = num, width = wid, bore = 2, optimized = false);
+            translate([0, 15, 0]) spur_gear(modul = mod, tooth_number = num, width = wid, bore = 2 + axle_tol, optimized = false);
+            translate([0, 15, 1.95]) cylinder(d = 5, h = 3.05);
+            
+            translate([15, 0, 0]) spur_gear(modul = mod, tooth_number = num, width = wid, bore = 2 + axle_tol, optimized = false);
         }
-        if (hex_bore) {
-            translate([0, 15, -1]) cylinder(d = 2 * hex_ratio, h = 6, $fn = 6);
-            translate([15, 15, -1]) cylinder(d = 2 * hex_ratio, h = 6, $fn = 6);
-        }
+        
+        translate([0, 15, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 8, $fn = hex_bore ? 6 : $fn);
+        translate([15, 15, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 8, $fn = hex_bore ? 6 : $fn);
     }
 }
 
 translate([0, 0, 0]) {
-    mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+    mechanism(3d_print = true, hex_bores = true, tol_boxes = true, axle_tol = -0.1);
     import_mirror();
 }
 
-//parts_to_print();
+//parts_to_print(axle_tol = -0.1);
+
 /*
 translate([30, 0, 0]) parts_to_print(hex_bore = true, include_miter = true);
 translate([0, 15, 0]) parts_to_print(hex_bore = true, custom_gears = false, include_miter = false);
