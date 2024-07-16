@@ -5,6 +5,7 @@
 use<mirror_M05.scad>;
 use<mechanism.scad>;
 use<util.scad>;
+use<mini_stepper.scad>;
 
 $fs = 0.01;
 $fn = 100;
@@ -13,10 +14,10 @@ inch = 25.4;
 
 motor_wid = 20.3;
 
-module securing_bolt() {
+module securing_bolt(dia_tol = 0, head_tol = 0) {
     color("blue") {
-        rotate([0, -90, 0]) cylinder(h = 7, d = 8);
-        rotate([0, 90, 0]) cylinder(h = 14, d = 4.115);
+        rotate([0, -90, 0]) cylinder(h = 7, d = 8 + head_tol);
+        translate([-0.05, 0, 0]) rotate([0, 90, 0]) cylinder(h = 14.05, d = 4.11226 + dia_tol);
     }
 }
 
@@ -196,13 +197,48 @@ module mechanism_mount() {
     }
 }
 
-//import_mirror(convexity = 1);
-_render("red") mount();
+module motor_holder_print() {
+    difference() {
+        motor_holder();
+        translate([0, 0, 8.3]) rotate([180, 0, 90]) mini_stepper(tol_boxes = true);
+    }
+}
+
+module screw_test_print() {
+    difference() {
+        cube([8, 38, 8]);
+        
+        dict = [[4, 0], [10, 0.05], [16, 0.1], [22, 0.15], [28, 0.2], [34, 0.25]];
+        for (i = [4, 10, 16, 22, 28, 34]) {
+            tol = dict[search(i, dict)[0]][1];
+            
+            translate([4, i, 8.05]) rotate([0, 90, 0]) securing_bolt(dia_tol = tol, head_tol = 1);
+            translate([0.5, i - 1, 1]) rotate([0, -90, 0]) linear_extrude(height = 2) text(text = str(tol), size = 2);
+        }
+    }
+}
+
+module axle_tol_print() {
+    difference() {
+        cube([6, 26, 6]);
+        
+        dict = [[3, 0], [8, 0.05], [13, 0.1], [18, 0.15], [23, 0.2]];
+        for (i = [3, 8, 13, 18, 23]) {
+            tol = dict[search(i, dict)[0]][1];
+            
+            translate([3.3 - 3.556, i - 21.85, 0]) rotate([-90, 0, 0]) axles(tol_boxes = true, tol = tol);
+            translate([0.5, i - 1.33, 0.5]) rotate([0, -90, 0]) linear_extrude(height = 2) text(text = str(tol), size = 2);
+        }
+    }
+}
+
+import_mirror(convexity = 1);
+//_render("red") mount();
 
 //_render("orange") mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
-mechanism_mount();
+//mechanism_mount();
 
-// translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]);
+// translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
 
 // design some parts to test the tolerances of the printer in terms of screw holes,
 // axle-holding holes, and motors?

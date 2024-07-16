@@ -11,14 +11,14 @@ $fn = 64;
 hex_ratio = 2 / sqrt(3);
 tol_box_tolerance = 0.2;
 
-module axles(tol_boxes = false) {
+module axles(tol_boxes = false, tol = tol_box_tolerance / 2) {
     translate([3.556, 1, 21.85]) rotate([90, -12.5, 0]) {
         color("gray") cylinder(d = 2 * hex_ratio, h = 15, $fn = 6);
-        if (tol_boxes) color("orange") translate([0, 0, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 15 + tol_box_tolerance);
+        if (tol_boxes) color("orange") translate([0, - tol, 0]) cylinder(d = 2 * hex_ratio + 2 * tol, h = 15 + 2 * tol);
     }
     
     color("gray") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio, h = 23, $fn = 6);
-    if (tol_boxes) color("orange") translate([21.85, 1, 3.556]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance / 3, h = 23 + tol_box_tolerance);
+    if (tol_boxes) color("orange") translate([21.85, 1, 3.556 - tol]) rotate([90, -12.5, 0]) cylinder(d = 2 * hex_ratio + 2 * tol, h = 23 + 2 * tol);
 }
 
 module bevel_gears(singular = false, hex_bore = false, set_screw = true) {

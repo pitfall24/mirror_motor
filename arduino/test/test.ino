@@ -1,27 +1,33 @@
-#include <Servo.h>
+#include <AccelStepper.h>
 
-Servo servo;
-int val;
-int sign;
+#define X_STEP_PIN 2
+#define X_DIR_PIN 5
 
+AccelStepper stepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+ 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
-  servo.attach(11);
-  val = 0;
-  sign = 1;
+  stepper.setMaxSpeed(100);
+  stepper.setAcceleration(100);
+
+  stepper.setEnablePin(8);
+  stepper.enableOutputs();
+
+  stepper.setPinsInverted(false, false, true);
 }
 
 void loop() {
-  val += 1 * sign;
+  Serial.write("Going to 20000\n");
 
-  if (val == 180 || val == 0) {
-    sign = -sign;
-  }
-
-  servo.write(val);
+  stepper.moveTo(20000);
+  stepper.runToPosition();
 
   delay(10);
-  Serial.print(val, DEC);
-  Serial.write("\n");
+  Serial.write("Going to -200\n");
+
+  stepper.moveTo(-20);
+  stepper.runToPosition();
+
+  delay(10);
 }
