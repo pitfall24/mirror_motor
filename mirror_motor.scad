@@ -106,7 +106,7 @@ module mount() {
             outer_walls();
         }
         
-        securing_bolt_pos() securing_bolt(dia_tol = -0.25);
+        securing_bolt_pos() securing_bolt(dia_tol = -0.25); // securing bolt tolerance here !!
     }
     
     color("blue") difference() {
@@ -156,7 +156,7 @@ module mechanism_mount() {
             
             // bottom-right large gear bracing
             color("peru") {
-                translate([21.85, -14.635, 8.15]) difference() {
+                translate([21.85, -14.635, 8.1]) difference() {
                     cylinder(d = 11, h = 2);
                     union() {
                         translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
@@ -170,9 +170,9 @@ module mechanism_mount() {
                 translate([15.5, -16.5, 0]) cube([2, 4, 10]);
             
                 // bottom-right upper stops
-                translate([19, -26, 3]) beveled_cube([6, 4, 12], [1, 0, 1], 0.5);
-                translate([19, -7.7, 5]) beveled_cube([6, 3.5, 10], [1, 0, 1], 0.5);
-                translate([19, -24, 13]) cube([6, 18, 2]);
+                translate([19, -26, 3]) beveled_cube([6, 4, 11.5], [1, 0, 1], 0.5);
+                translate([19, -7.7, 5]) beveled_cube([6, 3.5, 9.5], [1, 0, 1], 0.5);
+                translate([19, -24, 12.3]) cube([6, 18, 2.2]);
                 translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
             }
             
@@ -244,11 +244,37 @@ module axle_tol_print() {
     }
 }
 
-import_mirror(convexity = 1);
-_render("red") mount();
+module elastic_test_print(solid = true, elastic = true) {
+    hex_ratio = 2 / sqrt(3);
+    toled_axle = 1.8 * hex_ratio + 0.9 * 0.2;
+    
+    difference() {
+        union() {
+            if (solid) difference() {
+                cube([8, 8, 8]);
+                
+                translate([4, 4, -0.1]) cylinder(d = toled_axle + 1, h = 10);
+                translate([4, 4, 7]) cylinder(d = 6.5, h = 2);
+                translate([4, 4, 2.5]) cylinder(d = 5, h = 2);
+            };
+            
+            if (elastic) color("lime", 0.5) translate([4, 4, 0]) cylinder(d = toled_axle + 1, h = 7);
+            if (elastic) color("lime", 0.5) translate([4, 4, 7]) cylinder(d = 6.5, h = 1);
+            if (elastic) color("lime", 0.5) translate([4, 4, 2.5]) cylinder(d = 5, h = 2);
+        }
+        
+        translate([4, 4, -0.1]) cylinder(d = toled_axle, h = 10); // axle
+    }
+}
 
-/*_render("orange")*/ mechanism(3d_print = true, hex_bores = true, tol_boxes = false);
-mechanism_mount();
+elastic_test_print(solid = true, elastic = false);
+elastic_test_print(solid = false, elastic = true);
+
+//import_mirror(convexity = 1);
+//_render("red") mount();
+
+/*_render("orange")*/ //mechanism(3d_print = true, hex_bores = true, tol_boxes = false);
+//mechanism_mount();
 
 // translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
 

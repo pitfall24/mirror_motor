@@ -26,7 +26,7 @@ module mini_stepper(tol_boxes = false) {
     translate([0, 0, 8.3]) {
         translate([0, 0, -0.05]) cylinder(d = 4, h = 1.65); // height is 1mm too high for tolerance
         color("silver") cylinder(d = 1.5, h = 3.99);
-        translate([0, 0, 4 - 1.5]) spur_gear(modul = 2.235 / 9, tooth_number = 9, width = 1.5, bore = 0.8, optimized = false);
+        translate([0, 0, 4 - 1.5]) spur_gear(modul = 2.05 / 9, tooth_number = 9, width = 1.5, bore = 0.8, optimized = false);
     }
     
     color("green") if (!tol_boxes) rotate([0, 0, 35]) translate([-5, 0, 2]) cube([2.5, 5, 4], center = true);
