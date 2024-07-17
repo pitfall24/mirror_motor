@@ -118,7 +118,7 @@ module mount() {
     }
 }
 
-module motor_holder(outer_dia = 10) {
+module motor_holder(outer_dia = 10, parity = false) {
     color("steelblue") {
         translate([0, 0, -1.5]) cylinder(d = outer_dia, h = 1.5);
         difference() {
@@ -126,6 +126,7 @@ module motor_holder(outer_dia = 10) {
             
             union() {
                 translate([0, 0, 1.9]) cube([4, 25, 4], center = true);
+                translate([0, 0, 1.9]) rotate([0, 0, parity ? -25 : 25]) cube([4, 25, 4], center = true);
                 translate([-1, -7, 4]) rotate([0, 0, 55]) cube([3, 6, 5]);
             }
         }
@@ -267,13 +268,13 @@ module elastic_test_print(solid = true, elastic = true) {
     }
 }
 
-elastic_test_print(solid = true, elastic = false);
-elastic_test_print(solid = false, elastic = true);
+//elastic_test_print(solid = true, elastic = false);
+//elastic_test_print(solid = false, elastic = true);
 
-//import_mirror(convexity = 1);
-//_render("red") mount();
+import_mirror(convexity = 1);
+_render("red") mount();
 
-/*_render("orange")*/ //mechanism(3d_print = true, hex_bores = true, tol_boxes = false);
+/*_render("orange")*/ mechanism(axle_tol = -0.2, tol_boxes = false);
 //mechanism_mount();
 
 // translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
