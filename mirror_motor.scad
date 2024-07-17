@@ -145,70 +145,110 @@ module motor_holder(outer_dia = 10, parity = false) {
     }
 }
 
+// generic elastic bearing assembly
+module bearing(outer_dia = 7, inner_dia = 3.5, height = 6) {
+    // TODO: do
+}
+
 module mechanism_mount() {
+    // coordinates
+    top_le_main_ax = [3.556, 0, 21.85];
+    top_le_sec_ax = [3.556, 0, 21.85 + 9 + 2.16];
+    top_le_motor = [3.556, 0, 21.85 + 9 + 6.5 + 2.16 + 1];
+    
+    bot_ri_main_ax = [21.85, 0, 3.556];
+    bot_ri_vert_ax = [21.85, -14.635, 5];
+    bot_ri_sec_ax = [21.85 - 9 - 2.16, -11 - 3.635, 3.556 + 6.6];
+    bot_ri_motor = [21.85 - 9 - 2.16 + (6.5 + 1) * cos(225), -11 - 3.635 + (6.5 + 1) * sin(225), 3.556 + 6.6];
+    
+    // pulled out for convenience
+    module bearings() {
+        color("lime", 0.5) {
+            translate(bot_ri_vert_ax + [0, 0, 13.1]) cube([6, 6, 13], center = true); // bottom right vertical miter axle bearing // BEARING (3)
+            translate(bot_ri_sec_ax + [-3, -3, -8]) cube([6, 6, 6]); // bottom right secondary axle lower bearing // BEARING (4)
+            translate(bot_ri_sec_ax + [0, 0, 2.1]) cylinder(d = 7, h = 6); // bottom right secondary axle upper bearing // BEARING (5)
+            
+            translate(top_le_main_ax + [0, -11, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 4.7); // top left main axle bearing // BEARING (6)
+            translate(top_le_sec_ax + [0, -11, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 5.8); // top left secondary axle outer bearing // BEARING (7)
+            translate(top_le_sec_ax + [0, -1.2, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 5.8); // top left secondary axle inner bearing // BEARING (8)
+            
+            translate(top_le_main_ax + [0, -9, 0]) rotate([-90, 0, 0]) cylinder(d = 8, h = 2); // top left main axle tentative *plastic* bearing // BEARING (9)
+            translate(top_le_main_ax + [0, -7, 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 3);
+        }
+    }
+    
     difference() {
         union() {
+            // --- supporting bases, braces, and platforms ---
             color("plum") {
-                translate([9, -23.5, 0]) cube([8, 23, 5]); // main lower brace
-                translate([16.5, -4.5, 0]) cube([2.8, 4, 5]); // minor lower brace
-                translate([9, -23.5, 0]) beveled_cube([16.5, 4, 8], [0, 1, 0], 0.5); // outer bottom-right axle brace
-                translate([9, -7.7, 0]) beveled_cube([16.5, 3.5, 8], [0, 1, 0], 0.5); // adjust this thickness, inner brace
-            }
-            
-            // bottom-right large gear bracing
-            color("peru") {
-                translate([21.85, -14.635, 8.1]) difference() {
-                    cylinder(d = 11, h = 2);
-                    union() {
-                        translate([0, 0, -0.1]) cylinder(d = 9, h = 2.2);
-                        translate([5, 0, 0]) rotate([0, 0, 45]) cube([6, 6, 4.5], center = true);
-                    }
+                // NOTE: in the future these will both be converted to elastic bearings
+                translate([13, -25, 0]) beveled_cube([12.5, 5.5, 7], [0, 1, 0], 0.5); // outer bottom-right axle brace/bearing // BEARING (1)
+                translate([13, -7.7, 0]) beveled_cube([12.5, 3.5, 7], [0, 1, 0], 0.5); // inner bottom-right axle brace/bearing // BEARING (2)
+                translate([15.5, -23.5, 0]) cube([2.5, 19.3, 7]); // connector. NOTE: might add another far-right connector for rigidity?
+                
+                // main lower platform
+                difference() {
+                    translate([-4.05, -25, 0]) cube([20, 24.5, 7]); // made this thicker for strength and rigidity (and heft?)
+                    translate(bot_ri_sec_ax + [-3, -3, -8]) cube([6, 6, 6]); // BEARING (4)
                 }
                 
-                // bottom-right lower supports
-                translate([19.85, -21, 7]) cube([4, 2.2, 3]);
-                translate([16.85, -10.2, 7.5]) cube([7, 4.5, 2.5]);
-                translate([15.5, -16.5, 0]) cube([2, 4, 10]);
-            
-                // bottom-right upper stops
-                translate([19, -26, 3]) beveled_cube([6, 4, 11.5], [1, 0, 1], 0.5);
-                translate([19, -7.7, 5]) beveled_cube([6, 3.5, 9.5], [1, 0, 1], 0.5);
-                translate([19, -24, 12.3]) cube([6, 18, 2.2]);
-                translate([22, -14.635, 15]) cube([6, 6, 4], center = true);
+                // diagonal brace
+                translate([-0.55, -0.5, 0]) rotate([0, -90, 0]) linear_extrude(height = 3.5) polygon(points = [ [21.7, 0], [0, -20], [0, 0] ]);
+                
+                // vertical support pillar and brace
+                translate([7.95, -6.9, 0]) cube([8, 6.4, 34]);
+                translate([13.87, -1, 16.5]) rotate([0, -90, 0]) linear_extrude(height = 2.5) polygon(points = [ [17.5, 0], [0, 10], [0, 0] ]);
+                
+                // smaller vertical pillar
+                translate([15.9, -4.3, 0]) cube([3.35, 3.8, 17.5]);
             }
             
-            color("plum") translate([-0.9, -19, 0]) cube([10, 18.5, 5]); // left side main brace
+            // --- bearings ---
+            bearings();
             
-            color("peru") {
-                // left axle supports
-                translate([0, -7.9, 15]) beveled_cube([7, 3.7, 10], [0, 1, 0], 0.5);
-                translate([0, -7.9, 10]) cube([7, 6.2, 9]);
-                translate([1, -14, 9.5]) cube([5, 7, 3]);
-                translate([1, -18.3, 19.3]) beveled_cube([5, 5, 5], [0, 1, 0], 0.5); // needs to be supported // TODO
+            // --- supports ---
+            difference() {
+                color("peru") union() {
+                    translate([-4.05, -28.9, 0]) cube([29.55, 4, 16]); // backplate
+                    translate([16, -28.9, 12.5]) cube([9.5, 28.4, 5]); // right support (primarily for bearing (3) 
+                }
+                
+                bearings();
+                translate(bot_ri_motor + [0, 0, 2]) cylinder(d = 11.9, h = 4.5);
             }
+            
+            // left motor mount
+            difference() {
+                translate([3.556, -11.45, 21.85 + 18.66]) rotate([90, 90, 0]) motor_holder(outer_dia = 12);
+                translate([3.556, -9.3, 21.85 + 13]) cube([10, 5, 3], center = true);
+            }
+            
+            // right motor mount
+            xdiff = 18 / 2 + 4.32 / 2 - (13 / 2 + 2 / 2) * cos(225);
+            ydiff = (13 / 2 + 2 / 2) * sin(225);
             
             difference() {
-                translate([14.75, -14.635, 14.256]) motor_holder(outer_dia = 12); // right motor mount
-                translate([22, -14.635, 15]) cube([5, 5.9, 3.9], center = true);
+                translate([21.85 - xdiff, -14.635 + ydiff, 3.556 + 9.05]) rotate([0, 0, 60]) motor_holder(outer_dia = 12, parity = true);
+                translate(bot_ri_sec_ax + [0, 0, 0.8]) cylinder(d = 7, h = 6);
             }
-            
-            translate([3.556, -15, 14.85]) rotate([90, 135, 0]) motor_holder(outer_dia = 11.5); // left motor mount
-            
-            color("peru") difference() {
-                translate([0.3, -18, 4.9]) cube([6, 4, 7]);
-                union() {
-                    translate([3.3, -18.5, 15]) rotate([-90, 0, 0]) cylinder(d = 11, h = 5);
-                    translate([4.57756, -18.5, 11]) rotate([0, 45, 0]) cube([3, 5, 3]);
-                }
-            }
-            
-            color("peru") translate([10, -16.2, 4.9]) cube([2, 3, 8]);
         }
         
-        // difference operations between such complicated meshes is quite expensive
-        //mechanism(3d_print = true, hex_bores = true, tol_boxes = true);
+        // difference operations between such complicated meshes is quite expensive (theyre no longer *that* complicated)
+        mechanism(tol_boxes = true);
     }
 }
+
+import_mirror(convexity = 1);
+_render("red") mount();
+
+_render("orange") mechanism(axle_tol = -0.2, tol_boxes = false);
+mechanism_mount();
+
+// translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
+
+// ######################################################################################
+// test printing land ###################################################################
+// ######################################################################################
 
 module motor_holder_print() {
     difference() {
@@ -270,14 +310,6 @@ module elastic_test_print(solid = true, elastic = true) {
 
 //elastic_test_print(solid = true, elastic = false);
 //elastic_test_print(solid = false, elastic = true);
-
-import_mirror(convexity = 1);
-_render("red") mount();
-
-/*_render("orange")*/ mechanism(axle_tol = -0.2, tol_boxes = false);
-//mechanism_mount();
-
-// translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
 
 
 
