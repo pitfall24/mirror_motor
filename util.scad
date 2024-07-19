@@ -7,8 +7,8 @@ $fn = 100;
 
 inf = 1 / 0; // positive infinity
 
-module _render(col = "gold") {
-    if (true && $preview) {
+module _render(col = "gold", param = true) {
+    if (param && $preview) {
         color(col) render(convexity = 6) children();
     } else {
         color(col) children();

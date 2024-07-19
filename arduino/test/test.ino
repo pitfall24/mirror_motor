@@ -16,8 +16,8 @@ unsigned long stepMillis = 25;*/
 void setup() {
   Serial.begin(115200);
 
-  stepper.setMaxSpeed(500);
-  stepper.setAcceleration(5000);
+  stepper.setMaxSpeed(80);
+  stepper.setAcceleration(300);
 
   //pinMode(X_STEP_PIN, OUTPUT);
   //pinMode(X_DIR_PIN, OUTPUT);
@@ -34,7 +34,7 @@ void setup() {
 void loop() {
   Serial.write("Going to 20\n");
 
-  stepper.moveTo(500);
+  stepper.moveTo(240);
   stepper.runToPosition();
 
   Serial.write("Going to 0\n");

@@ -11,8 +11,7 @@ $fs = 0.01;
 $fn = 100;
 
 inch = 25.4;
-
-motor_wid = 20.3;
+hex_ratio = 2 / sqrt(3);
 
 module securing_bolt(dia_tol = 0, head_tol = 0) {
     color("blue") {
@@ -145,11 +144,6 @@ module motor_holder(outer_dia = 10, parity = false) {
     }
 }
 
-// generic elastic bearing assembly
-module bearing(outer_dia = 7, inner_dia = 3.5, height = 6) {
-    // TODO: do
-}
-
 module mechanism_mount() {
     // coordinates
     top_le_main_ax = [3.556, 0, 21.85];
@@ -164,16 +158,19 @@ module mechanism_mount() {
     // pulled out for convenience
     module bearings() {
         color("lime", 0.5) {
-            translate(bot_ri_vert_ax + [0, 0, 13.1]) cube([6, 6, 13], center = true); // bottom right vertical miter axle bearing // BEARING (3)
+            translate(bot_ri_vert_ax + [0, 0, 15.6]) cube([6, 6, 18], center = true); // bottom right vertical miter axle bearing // BEARING (3)
             translate(bot_ri_sec_ax + [-3, -3, -8]) cube([6, 6, 6]); // bottom right secondary axle lower bearing // BEARING (4)
-            translate(bot_ri_sec_ax + [0, 0, 2.1]) cylinder(d = 7, h = 6); // bottom right secondary axle upper bearing // BEARING (5)
+            translate(bot_ri_sec_ax + [0, 0, 2.1]) cylinder(d = 6, h = 9); // bottom right secondary axle upper bearing // BEARING (5)
             
             translate(top_le_main_ax + [0, -11, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 4.7); // top left main axle bearing // BEARING (6)
             translate(top_le_sec_ax + [0, -11, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 5.8); // top left secondary axle outer bearing // BEARING (7)
             translate(top_le_sec_ax + [0, -1.2, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 5.8); // top left secondary axle inner bearing // BEARING (8)
             
-            translate(top_le_main_ax + [0, -9, 0]) rotate([-90, 0, 0]) cylinder(d = 8, h = 2); // top left main axle tentative *plastic* bearing // BEARING (9)
-            translate(top_le_main_ax + [0, -7, 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 3);
+            difference() {
+                translate(top_le_main_ax + [0, -9, 0]) rotate([-90, 0, 0]) cylinder(d = 8, h = 2); // top left main axle tentative *plastic* bearing // BEARING (9)
+                translate(top_le_main_ax + [-4, -8, 0]) cube([8, 2.1, 5.1], center = true); // slot to allow the bearing to be inserted
+            }
+            translate(top_le_main_ax + [0, -7, 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 3); // actual bearing (9)
         }
     }
     
@@ -196,7 +193,7 @@ module mechanism_mount() {
                 translate([-0.55, -0.5, 0]) rotate([0, -90, 0]) linear_extrude(height = 3.5) polygon(points = [ [21.7, 0], [0, -20], [0, 0] ]);
                 
                 // vertical support pillar and brace
-                translate([7.95, -6.9, 0]) cube([8, 6.4, 34]);
+                translate([7.95, -6.9, 0]) cube([8, 6.4, 36.5]);
                 translate([13.87, -1, 16.5]) rotate([0, -90, 0]) linear_extrude(height = 2.5) polygon(points = [ [17.5, 0], [0, 10], [0, 0] ]);
                 
                 // smaller vertical pillar
@@ -209,17 +206,62 @@ module mechanism_mount() {
             // --- supports ---
             difference() {
                 color("peru") union() {
-                    translate([-4.05, -28.9, 0]) cube([29.55, 4, 16]); // backplate
-                    translate([16, -28.9, 12.5]) cube([9.5, 28.4, 5]); // right support (primarily for bearing (3) 
+                    // backplate
+                    difference() {
+                        translate([-4.05, -28.9, 0]) cube([29.55, 4, 16]);
+                        difference() {
+                            translate([20, -30, -1.5]) rotate([0, 45, 0]) cube([10, 6, 10]);
+                            translate([13, -30, 0]) beveled_cube([12.5, 5.5, 7], [0, 1, 0], 0.5);
+                        }
+                    }
+                    
+                    
+                    
+                    translate([16, -28.9, 12.5]) cube([9.5, 28.4, 5]); // right support (primarily for bearing (3)
+                    
+                    // bottom right secondary axle upper bearing support
+                    difference() {
+                        translate(bot_ri_sec_ax + [2.75, 0, 5.2]) cube([5.5, 6, 5.8], center = true);
+                        translate(bot_ri_sec_ax + [0, 0, 2.1]) cylinder(d = 6, h = 8);
+                    }
+                    
+                    // bottom right gear chain motor mount support
+                    difference() {
+                        translate(bot_ri_motor + [0, 0, -3.25]) cylinder(d = 12, h = 4.3);
+                        
+                        translate(bot_ri_motor + [0, 0, -2]) cylinder(d = 4, h = 3);
+                        translate(bot_ri_sec_ax + [0, 0, -3.25]) cylinder(d = 15, h = 5);
+                    }
+                    
+                    // top left outer gear supports
+                    translate([2, -11.5, 6.95]) cube([5.05, 5, 5]);
+                    difference() {
+                        translate([top_le_main_ax[0] - 5.5, -14.5, 4.95]) cube([9, 3, 35.05]);
+                        translate(top_le_motor + [0, -10, 0]) rotate([90, 0, 0]) cylinder(d = 12, h = 5);
+                    }
+                    
+                    // upper-level stabilizer
+                    translate([11.95, -17.63, 29.6]) cube([4, 16, 4]);
+                    translate([15.95, -17.63, 29.6]) cube([8.9, 6, 4]);
+                    translate([top_le_main_ax[0] + 3.5, -14.5, 29.6]) cube([5, 3, 4]);
+                    
+                    // top left main axle inner bearing supports
+                    translate(top_le_main_ax + [3, -6.25, 0]) cube([6, 4.5, 6], center = true);
+                    translate([top_le_main_ax[0], -6.8, 29.5]) cube([6, 5.6, 7]);
+                    translate([2, -6.7, 24.3]) cube([6, 2.5, 6]);
+                    
+                    // left motor stabilizer
+                    translate([1.5, -10, 43]) cube([4.2, 7.3, 3]);
+                    translate([1.5, -6.7, 35.7]) cube([4.2, 4, 8]);
                 }
                 
                 bearings();
-                translate(bot_ri_motor + [0, 0, 2]) cylinder(d = 11.9, h = 4.5);
+                translate(bot_ri_motor + [0, 0, 2]) cylinder(d = 11.9, h = 3.9);
             }
             
             // left motor mount
             difference() {
-                translate([3.556, -11.45, 21.85 + 18.66]) rotate([90, 90, 0]) motor_holder(outer_dia = 12);
+                translate([3.556, -11.45, 21.85 + 18.66]) rotate([90, 115, 0]) motor_holder(outer_dia = 12);
                 translate([3.556, -9.3, 21.85 + 13]) cube([10, 5, 3], center = true);
             }
             
@@ -229,7 +271,7 @@ module mechanism_mount() {
             
             difference() {
                 translate([21.85 - xdiff, -14.635 + ydiff, 3.556 + 9.05]) rotate([0, 0, 60]) motor_holder(outer_dia = 12, parity = true);
-                translate(bot_ri_sec_ax + [0, 0, 0.8]) cylinder(d = 7, h = 6);
+                translate(bot_ri_sec_ax + [0, 0, 0.8]) cylinder(d = 6, h = 6);
             }
         }
         
@@ -238,10 +280,10 @@ module mechanism_mount() {
     }
 }
 
-import_mirror(convexity = 1);
+//import_mirror(convexity = 1);
 _render("red") mount();
 
-_render("orange") mechanism(axle_tol = -0.2, tol_boxes = false);
+//_render("orange") mechanism(axle_tol = -0.2, tol_boxes = false);
 mechanism_mount();
 
 // translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size
@@ -273,20 +315,21 @@ module screw_test_print() {
 
 module axle_tol_print() {
     difference() {
-        cube([6, 26, 6]);
+        cube([6, 36, 9]);
         
-        dict = [[3, 0], [8, 0.05], [13, 0.1], [18, 0.15], [23, 0.2]];
-        for (i = [3, 8, 13, 18, 23]) {
+        dict = [[3, 0], [8, -0.025], [13, -0.05], [18, -0.075], [23, -0.1], [28, -0.125], [33, -0.15]];
+        for (i = [3, 8, 13, 18, 23, 28, 33]) {
             tol = dict[search(i, dict)[0]][1];
             
             translate([3.3 - 3.556, i - 21.85, 0]) rotate([-90, 0, 0]) axles(tol_boxes = true, tol = tol);
             translate([0.5, i - 1.33, 0.5]) rotate([0, -90, 0]) linear_extrude(height = 2) text(text = str(tol), size = 2);
         }
+        
+        translate([4, 1, 0.5]) rotate([90, -90, 0]) linear_extrude(height = 2) text(text = str(ceil(20000 * hex_ratio) / 10000), size = 1.8);
     }
 }
 
 module elastic_test_print(solid = true, elastic = true) {
-    hex_ratio = 2 / sqrt(3);
     toled_axle = 1.8 * hex_ratio + 0.9 * 0.2;
     
     difference() {
@@ -307,6 +350,8 @@ module elastic_test_print(solid = true, elastic = true) {
         translate([4, 4, -0.1]) cylinder(d = toled_axle, h = 10); // axle
     }
 }
+
+//axle_tol_print();
 
 //elastic_test_print(solid = true, elastic = false);
 //elastic_test_print(solid = false, elastic = true);
