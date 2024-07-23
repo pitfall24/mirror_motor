@@ -105,7 +105,7 @@ module mount() {
             outer_walls();
         }
         
-        securing_bolt_pos() securing_bolt(dia_tol = -0.25); // securing bolt tolerance here !!
+        securing_bolt_pos() securing_bolt(dia_tol = -0.32); // securing bolt tolerance here !!
     }
     
     color("blue") difference() {
@@ -209,9 +209,14 @@ module mechanism_mount() {
                     // backplate
                     difference() {
                         translate([-4.05, -28.9, 0]) cube([29.55, 4, 16]);
-                        difference() {
-                            translate([20, -30, -1.5]) rotate([0, 45, 0]) cube([10, 6, 10]);
-                            translate([13, -30, 0]) beveled_cube([12.5, 5.5, 7], [0, 1, 0], 0.5);
+                        
+                        union() {
+                            difference() {
+                                translate([20, -30, -1.5]) rotate([0, 45, 0]) cube([10, 6, 10]);
+                                translate([13, -30, 0]) beveled_cube([12.5, 5.5, 7], [0, 1, 0], 0.5);
+                            }
+                            
+                            translate([3, -29, 13]) cube([8, 5, 4]);
                         }
                     }
                     
@@ -241,9 +246,15 @@ module mechanism_mount() {
                     }
                     
                     // upper-level stabilizer
-                    translate([11.95, -17.63, 29.6]) cube([4, 16, 4]);
-                    translate([15.95, -17.63, 29.6]) cube([8.9, 6, 4]);
-                    translate([top_le_main_ax[0] + 3.5, -14.5, 29.6]) cube([5, 3, 4]);
+                    difference() {
+                        union() {
+                            translate([11.95, -17.63, 29.6]) cube([4, 16, 4]);
+                            translate([15.95, -17.63, 29.6]) cube([8.9, 6, 4]);
+                            translate([top_le_main_ax[0] + 3.5, -14.5, 29.6]) cube([5, 3, 4]);
+                        }
+                        
+                        translate(bot_ri_sec_ax + [0, 0, 19]) cylinder(d = 3.5, h = 5);
+                    }
                     
                     // top left main axle inner bearing supports
                     translate(top_le_main_ax + [3, -6.25, 0]) cube([6, 4.5, 6], center = true);
@@ -270,8 +281,10 @@ module mechanism_mount() {
             ydiff = (13 / 2 + 2 / 2) * sin(225);
             
             difference() {
-                translate([21.85 - xdiff, -14.635 + ydiff, 3.556 + 9.05]) rotate([0, 0, 60]) motor_holder(outer_dia = 12, parity = true);
+                translate([21.85 - xdiff, -14.635 + ydiff, 3.556 + 8.3]) rotate([0, 0, 75]) motor_holder(outer_dia = 12, parity = true);
+                
                 translate(bot_ri_sec_ax + [0, 0, 0.8]) cylinder(d = 6, h = 6);
+                translate([4, -29, 13]) cube([7, 6, 4]);
             }
         }
         
@@ -283,7 +296,7 @@ module mechanism_mount() {
 //import_mirror(convexity = 1);
 _render("red") mount();
 
-//_render("orange") mechanism(axle_tol = -0.2, tol_boxes = false);
+//_render("orange") mechanism(tol_boxes = false);
 mechanism_mount();
 
 // translate([-20, -20, 0]) cube([19.74, 8.34, 23.25]); // servo motor size

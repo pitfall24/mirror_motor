@@ -12,7 +12,7 @@ $fn = 64;
 hex_ratio = 2 / sqrt(3);
 tol_box_tolerance = -0.1;
 
-module axles(tol_boxes = false, tol = tol_box_tolerance / 2) {
+module axles(tol_boxes = false, tol = tol_box_tolerance / 2) {  
     // top-left axle
     translate([3.556, 1, 21.85]) rotate([90, 0, 0]) {
         if (tol_boxes) {
@@ -33,15 +33,15 @@ module axles(tol_boxes = false, tol = tol_box_tolerance / 2) {
 module bevel_gears(singular = false, hex_bore = true, set_screw = false, axle_tol = 0) {
     difference() {
         if (singular) {
-            bevel_gear(modul = 0.5, tooth_number = 13, partial_cone_angle = 45, tooth_width = 2, bore = hex_bore ? 1.5 : 2);
+            bevel_gear(modul = 0.8125, tooth_number = 8, partial_cone_angle = 45, tooth_width = 2.5, bore = hex_bore ? 1.5 : 2);
         } else {
-            bevel_gear_pair(modul = 0.5, gear_teeth = 13, pinion_teeth = 13, axis_angle = 90, tooth_width = 2, gear_bore = hex_bore ? 1.5 : 2, pinion_bore = hex_bore ? 1.5 : 2, together_built = true);
+            bevel_gear_pair(modul = 0.8125, gear_teeth = 8, pinion_teeth = 8, axis_angle = 90, tooth_width = 2.5, gear_bore = hex_bore ? 1.5 : 2, pinion_bore = hex_bore ? 1.5 : 2, together_built = true);
         }
         if (hex_bore) {
             if (!singular) {
-                translate([-4, 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * hex_ratio + axle_tol, h = 3, $fn = 6);
+                translate([-4, 0, 3.85]) rotate([0, -90, 180]) cylinder(d = 2 * hex_ratio + axle_tol, h = 4, $fn = 6);
             }
-            translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 3, $fn = 6);
+            translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 4, $fn = 6);
         }
     }
     
@@ -55,10 +55,10 @@ module bevel_gears(singular = false, hex_bore = true, set_screw = false, axle_to
     
     if (!singular) {
         difference() {
-            translate([-(3 + 3.635), 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 5, h = 3);
+            translate([-(3 + 3.85), 0, 3.85]) rotate([0, -90, 180]) cylinder(d = 5, h = 3);
             union() {
-                translate([-(3.1 + 3.635), 0, 3.635]) rotate([0, -90, 180]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1) + axle_tol, h = 5, $fn = hex_bore ? 6 : $fn);
-                if (set_screw) translate([-(1.5 + 3.635), 0, 3.635]) rotate([90, 0, 0]) cylinder(d = 2 /*1.588*/, h = 3);
+                translate([-(3.1 + 3.85), 0, 3.85]) rotate([0, -90, 180]) cylinder(d = 2 * (hex_bore ? hex_ratio : 1) + axle_tol, h = 5, $fn = hex_bore ? 6 : $fn);
+                if (set_screw) translate([-(1.5 + 3.85), 0, 3.85]) rotate([90, 0, 0]) cylinder(d = 2 /*1.588*/, h = 3);
             }
         }
     }
@@ -109,34 +109,36 @@ module arranged_gear_pair(breadths = [18, 13, 4.32], teeths = [50, 45, 12], lowe
     translate([0, 18 / 2 + 4.32 / 2, -2]) double_gear(outer_breadth = outer_breadth, outer_teeth = outer_teeth, inner_breadth = inner_breadth, inner_teeth = inner_teeth, axle_tol = axle_tol, tol_boxes = tol_boxes);
 }
 
-module mechanism(tol_boxes = false, axle_tol = 0) {
-    axles(tol_boxes = tol_boxes); // main controlling axles
+module mechanism(tol_boxes = false, gear_axle_tol = -0.15, vert_axle_tol = -0.065, hori_axle_tol = -0.015) {
+    axles(tol_boxes = tol_boxes, tol = hori_axle_tol); // main controlling axles
     
     // vertical miter gear axle
     if (tol_boxes) {
-        color("orange") translate([21.85, -14.635, 5]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 23 + tol_box_tolerance);
+        color("orange") translate([21.85, -14.635, 5]) cylinder(d = 2 * hex_ratio + 2 * vert_axle_tol, h = 23 + tol_box_tolerance);
     } else {
         color("gray") translate([21.85, -14.635, 5]) rotate([0, 0, 30]) cylinder(d = 2 * hex_ratio, h = 23, $fn = 6);
     }
     
     // bottom-right gear train
     translate([21.85, -11, 3.556]) {
-        // miter gears
-        if (tol_boxes) color("orange") {
-            translate([0, 3 + tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
-            translate([0, -3.635, 1.635]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
-        } else {
-            rotate([90, 90, 0]) bevel_gears(hex_bore = true, set_screw = false, axle_tol = axle_tol);
+        translate([0, 3.85 - 3.635]) { // blunder lul
+            // miter gears
+            if (tol_boxes) color("orange") {
+                translate([0, 3 + tol_box_tolerance / 2, 0]) rotate([90, 0, 0]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
+                translate([0, -3.635, 1.635 + tol_box_tolerance / 2]) cylinder(d = 7 + tol_box_tolerance, h = 5 + tol_box_tolerance);
+            } else {
+                rotate([90, 90, 0]) bevel_gears(hex_bore = true, set_screw = false, axle_tol = vert_axle_tol);
+            }
         }
         
         
         translate([0, -3.635, 6.6]) {
-            rotate([0, 0, 90]) arranged_gear_pair(lower_spacer = false, axle_tol = axle_tol, tol_boxes = tol_boxes);
-            translate([-11.16 + 7.5 * cos(225), 7.5 * sin(225), 10.75]) rotate([180, 0, 135]) mini_stepper(tol_boxes = tol_boxes);
+            rotate([0, 0, 90]) arranged_gear_pair(lower_spacer = false, axle_tol = gear_axle_tol, tol_boxes = tol_boxes);
+            translate([-11.16 + 7.5 * cos(225), 7.5 * sin(225), 10]) rotate([180, 0, 135]) mini_stepper(tol_boxes = tol_boxes);
             
             // bottom-right gear pair axle
             if (tol_boxes) {
-                color("orange") translate([-11.16, 0, -6 - tol_box_tolerance / 2]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 16 + tol_box_tolerance + 5);
+                color("orange") translate([-11.16, 0, -6 + tol_box_tolerance / 2]) cylinder(d = 2 * hex_ratio + 2 * vert_axle_tol, h = 16 + tol_box_tolerance + 5);
             } else {
                 color("gray") translate([-11.16, 0, -6]) rotate([0, 0, 30]) cylinder(d = 2 * hex_ratio, h = 16, $fn = 6);
             }
@@ -145,12 +147,12 @@ module mechanism(tol_boxes = false, axle_tol = 0) {
     
     // top-left gear train
     translate([3.556, -9, 21.85]) {
-        translate([0, 0, 0]) rotate([90, 0, 0]) arranged_gear_pair(axle_tol = axle_tol, tol_boxes = tol_boxes); 
+        translate([0, 0, 0]) rotate([90, 0, 0]) arranged_gear_pair(axle_tol = gear_axle_tol, tol_boxes = tol_boxes); 
         translate([0, -10.75, 18.7]) rotate([-90, 0, 0]) mini_stepper(tol_boxes = tol_boxes);
         
         // top-left gear pair axle
         if (tol_boxes) {
-            color("orange") translate([0, 6 + tol_box_tolerance / 2, 11.16]) rotate([90, 0, 0]) cylinder(d = 2 * hex_ratio + tol_box_tolerance, h = 12 + tol_box_tolerance + 5);
+            color("orange") translate([0, 6 + tol_box_tolerance / 2, 11.16]) rotate([90, 0, 0]) cylinder(d = 2 * hex_ratio + 2 * hori_axle_tol, h = 12 + tol_box_tolerance + 5);
         } else {
             color("gray") translate([0, 6, 11.16]) rotate([90, 0, 0]) cylinder(d = 2 * hex_ratio, h = 12, $fn = 6);
         }
@@ -171,12 +173,12 @@ module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, i
     translate([0, 20, 0]) double_gear(axle_tol = axle_tol);
 }
 
-//mechanism(tol_boxes = true, axle_tol = -0.2);
-//mechanism(tol_boxes = false, axle_tol = -0.2);
+//mechanism(tol_boxes = false, vert_axle_tol = 0, hori_axle_tol = 0);
+//mechanism(tol_boxes = false);
 
 //import_mirror();
 
-parts_to_print(axle_tol = -0.2);
+parts_to_print(axle_tol = -0.15);
 
 
 
