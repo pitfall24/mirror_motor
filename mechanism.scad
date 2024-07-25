@@ -174,11 +174,11 @@ module parts_to_print(hex_bore = true, set_screw = false, custom_gears = true, i
 }
 
 //mechanism(tol_boxes = false, vert_axle_tol = 0, hori_axle_tol = 0);
-//mechanism(tol_boxes = false);
+mechanism(tol_boxes = false);
 
 //import_mirror();
 
-parts_to_print(axle_tol = -0.15);
+//parts_to_print(axle_tol = -0.15);
 
 
 

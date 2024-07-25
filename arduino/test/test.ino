@@ -1,44 +1,53 @@
 #include <AccelStepper.h>
 
-#define X_STEP_PIN 2
-#define X_DIR_PIN 5
 #define ENABLE_PIN 8
 
-AccelStepper stepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+#define X_STEP_PIN 2
+#define X_DIR_PIN 5
 
-/*bool doneSwitching;
+#define Y_STEP_PIN 3
+#define Y_DIR_PIN 6
 
-unsigned long curMillis;
-unsigned long steps = 0;
-unsigned long prevMillis = 0;
-unsigned long stepMillis = 25;*/
+#define Z_STEP_PIN 4
+#define Z_DIR_PIN 7
+
+#define A_STEP_PIN 12
+#define A_DIR_PIN 13
+
+AccelStepper xStepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+//AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+//AccelStepper zStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
+//AccelStepper aStepper(AccelStepper::DRIVER, A_STEP_PIN, A_DIR_PIN);
+
+int maxSpeed = 30;
+int maxAccel = 300;
 
 void setup() {
   Serial.begin(115200);
 
-  stepper.setMaxSpeed(80);
-  stepper.setAcceleration(300);
+  pinMode(ENABLE_PIN, HIGH);
 
-  //pinMode(X_STEP_PIN, OUTPUT);
-  //pinMode(X_DIR_PIN, OUTPUT);
-  //pinMode(ENABLE_PIN, OUTPUT);
+  xStepper.setMaxSpeed(maxSpeed);
+  xStepper.setAcceleration(maxAccel);
 
-  //digitalWrite(X_DIR_PIN, HIGH);
-  //digitalWrite(ENABLE_PIN, LOW);
-  stepper.setPinsInverted(false, false, true);
+  //yStepper.setMaxSpeed(maxSpeed);
+  //yStepper.setAcceleration(maxAccel);
 
-  stepper.setEnablePin(8);
-  stepper.enableOutputs();
+  //zStepper.setMaxSpeed(maxSpeed);
+  //zStepper.setAcceleration(maxAccel);
+
+  //aStepper.setMaxSpeed(maxSpeed);
+  //aStepper.setAcceleration(maxAccel);
 }
 
 void loop() {
-  Serial.write("Going to 20\n");
+  Serial.write("Going to 40\n");
 
-  stepper.moveTo(240);
-  stepper.runToPosition();
+  xStepper.moveTo(120);
+  xStepper.runToPosition();
 
   Serial.write("Going to 0\n");
 
-  stepper.moveTo(0);
-  stepper.runToPosition();
+  xStepper.moveTo(0);
+  xStepper.runToPosition();
 }
