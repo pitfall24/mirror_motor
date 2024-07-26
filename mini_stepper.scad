@@ -16,15 +16,15 @@ module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, tol_boxes = false) {
     }
     _render("darkgray") translate([0, -0.1, 0]) rotate([-90, 0, 0]) cylinder(d = 15 + securing_ring_tol, h = 1.6 + securing_ring_tol / 2); // securing ring
     
-    _render("silver") difference() { // main axle
+    _render("silver", false) difference() { // main axle
         translate([0, 1.4, 0]) rotate([-90, 0, 0]) cylinder(d = 4 + main_ax_tol, h = 13.6 + main_ax_tol / 2);
         
         if (!tol_boxes) {
-            translate([-3, 3, -3]) cube([6, 12.1, 1.5]); // flat face
+            translate([-3, 3, -3 - main_ax_tol / 2]) cube([6, 12.1, 1.5]); // flat face
             
             difference() { // end taper
-                translate([0, 13.6, 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 4);
-                translate([0, 13.5, 0]) rotate([-90, 0, 0]) cylinder(d1 = 6, d2 = 0, h = 3);
+                translate([0, 13.6 + main_ax_tol / sqrt(8), 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 4);
+                translate([0, 13.5 + main_ax_tol / sqrt(8), 0]) rotate([-90, 0, 0]) cylinder(d1 = 6, d2 = 0, h = 3);
             }
             
             translate([0, 14, 0]) rotate([-90, 0, 0]) cylinder(d = 1.25, h = 2); // end hole
@@ -34,9 +34,9 @@ module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, tol_boxes = false) {
     if (tol_boxes) _render("orange") translate([9.9, -31, -6]) cube([3, 10, 12]); // connector
 }
 
-module import_mini_stepper() {
-    import("./stepper_motor.stl", convexity = 6);
+module import_mini_stepper(convexity = 1) {
+    import("./stepper_motor.stl", convexity = convexity);
 }
 
-mini_stepper(tol_boxes = false);
+mini_stepper(main_ax_tol = 0, tol_boxes = false);
 //import_mini_stepper();

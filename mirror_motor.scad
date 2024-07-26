@@ -132,8 +132,6 @@ module motor_holder(securing_ring_tol = 0, screw_tol = 0) {
     }
 }
 
-mechanism_mount();
-
 module mechanism_mount() {
     // coordinates
     top_le_main_ax = [3.556, 0, 21.85];
@@ -145,11 +143,11 @@ module mechanism_mount() {
     module bearings() {
         color("lime", 0.5) {
             translate(top_le_main_ax + [0, -3.65, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 10.2); // top-left inner
-            translate(top_le_main_ax + [0, -18.1, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 6.8); // top-left outer
+            translate(top_le_main_ax + [0, -18.1, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left outer
             
             translate(top_le_main_ax + [0, -18.1, 15]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left motor axle
             
-            translate(bot_ri_main_ax) rotate([0, off_angle, 0]) translate([0, -15, 6.7]) cylinder(d = 8, h = 10); // bottom_right motor axle
+            translate(bot_ri_main_ax) rotate([0, off_angle, 0]) translate([0, -15, 8.7]) cylinder(d = 8, h = 9.135); // bottom_right motor axle
         }
     }
     
@@ -158,7 +156,7 @@ module mechanism_mount() {
             // --- supporting bases, braces, and platforms ---
             color("plum") {
                 translate([13, -27, 0]) beveled_cube([12.5, 7.5, 7], [0, 1, 0], 0.5); // outer bottom-right axle brace/bearing
-                translate([13, -8.1, 0]) beveled_cube([12.5, 3.7, 7], [0, 1, 0], 0.5); // inner bottom-right axle brace/bearing
+                translate([13, -8.21, 0]) beveled_cube([12.5, 3.81, 7], [0, 1, 0], 0.5); // inner bottom-right axle brace/bearing
                 translate([15.5, -23.5, 0]) cube([2, 19.3, 7]); // connector
                 
                 // main lower platform
@@ -174,20 +172,27 @@ module mechanism_mount() {
             // --- supports ---
             difference() {
                 color("peru") union() {
-                    /*translate(top_le_main_ax + [0, -9, 15]) rotate([-90, 0, 0]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
+                    translate(top_le_main_ax + [0, -9, 15]) rotate([-90, 0, 0]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
                     
                     translate(bot_ri_main_ax + [0, -15, 0]) rotate([0, off_angle, 0]) {
-                        translate([0, 0, 19]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
+                        translate([0, 0, 20.135]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
                         
-                        translate([-5, -12, -1]) cube([8.78, 7.5, 17.5]); // bottom-right motor outer support
-                        translate([-5, 6.9, -1]) cube([8.78, 3.7, 17.5]); // bottom-right motor inner support
-                        translate([-12, -4.5, -1]) cube([7.5, 9, 17.5]); // bottom-right motor left support
-                        translate([-5.1, -4.6, 7]) cube([7, 7, 2]); // bottom-right motor axle bearing stabilizer
-                    }*/
+                        translate([-5, -12, -1]) cube([8.78, 7.5, 18.635]); // bottom-right motor outer support
+                        translate([-5, 6.79, -1]) cube([8.78, 3.81, 18.635]); // bottom-right motor inner support
+                        translate([-12, -4.5, -1]) cube([7.5, 9, 18.635]); // bottom-right motor left support
+                        translate([-5.1, -4.6, 9]) cube([7, 7, 2]); // bottom-right motor axle bearing stabilizer
+                        
+                        translate([-19, -10.1, 16]) cube([7, 7, 7]);
+                    }
                     
                     translate([11.4, -2, 15.5]) cube([3, 12, 11.35]); // top-left motor right support
-                    //translate([11.4, -2, 15.5]) cube([3, 12, 11.35]); // top-left motor left support
-                    //translate([11.4, -2, 15.5]) cube([3, 12, 11.35]); // top-left motor middle support
+                    translate([-4.05, -2, 20]) cube([4.05, 8, 6.85]); // top-left motor left support
+                    translate([-4.05, -5, 25.5]) cube([18.45, 15, 1.35]); // top-left motor middle support
+                    
+                    translate([0.056, -13.85, 7]) cube([7, 10.2, 14.85]); // top-left motor inner bearing support
+                    translate([0.056, -3.65, 7]) cube([7, 1.65, 10]);
+                    translate([0.056, -25.1, 7]) cube([7, 7, 41.85]); // top-left motor outer bearings support
+                    translate([0.056, -25.1, 46.85]) cube([7, 20.1, 5]); // upper connector
                 }
                 
                 bearings();
@@ -199,22 +204,18 @@ module mechanism_mount() {
         
         //translate([-5, -30, -1]) cube([40, 40, 1.0]); // maybe remove some material from the very bottom for clearance
     }
-    
-    mechanism(off_angle = off_angle, tol_boxes = false);
 }
 
-module motor_holder_print() {
-    difference() {
-        motor_holder(outer_dia = 11);
-        translate([0, 0, 8.3]) rotate([180, 0, 90]) mini_stepper(tol_boxes = true);
-    }
-}
+motor_holder(securing_ring_tol = 0.1, screw_tol = 0.1);
 
-import_mirror(convexity = 1);
-_render("red") mount();
+//import_mirror(convexity = 1);
+
+//_render("red") mount();
+//mechanism_mount();
 
 //_render("orange") mechanism(tol_boxes = false);
-//mechanism_mount();
+//mechanism();
+
 
 
 
