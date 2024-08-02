@@ -200,21 +200,26 @@ module mechanism_mount() {
         }
         
         // difference operations between such complicated meshes is quite expensive (theyre no longer *that* complicated)
-        mechanism(off_angle = off_angle, tol_boxes = true, stepper_ax_tol = -0.015);
+        mechanism(off_angle = off_angle, tol_boxes = true, stepper_ax_tol = 0.1);
         
-        //translate([-5, -30, -1]) cube([40, 40, 1.0]); // maybe remove some material from the very bottom for clearance
+        translate(bot_ri_main_ax + [0, -15, 0]) rotate([0, off_angle, 0]) { // holes for allen-key for screws
+            translate([-8, -8, -6]) cylinder(d = 2, h = 10);
+            translate([-8, 8, -6]) cylinder(d = 2, h = 10);
+        }
+        
+        translate([-5, -30, -1]) cube([40, 40, 1.1]); // maybe remove some material from the very bottom for clearance
     }
 }
 
-motor_holder(securing_ring_tol = 0.1, screw_tol = 0.1);
+//motor_holder(securing_ring_tol = 0.1, screw_tol = 0.1);
 
-//import_mirror(convexity = 1);
+import_mirror(convexity = 1);
 
-//_render("red") mount();
-//mechanism_mount();
+_render("red") mount();
+mechanism_mount();
 
 //_render("orange") mechanism(tol_boxes = false);
-//mechanism();
+mechanism();
 
 
 

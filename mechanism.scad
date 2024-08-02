@@ -94,7 +94,7 @@ module normal_gear(for_stepper = false, axle_tol = 0) {
 }
 
 module mechanism(off_angle = 8, tol_boxes = false, stepper_ax_tol = 0, hori_axle_tol = -0.015, tolerance = 0) {
-    axles(tl_len = 25, br_len = 26, tol_boxes = false, tol = hori_axle_tol); // main controlling axles
+    axles(tl_len = 25, br_len = 26, tol_boxes = tol_boxes, tol = hori_axle_tol); // main controlling axles
     
     // bottom-right gear train
     translate([21.85, -15, 3.556]) {
@@ -121,7 +121,7 @@ module mechanism(off_angle = 8, tol_boxes = false, stepper_ax_tol = 0, hori_axle
             _render("green", false) translate([0, -5, 0]) rotate([90, 6, 0]) normal_gear(for_stepper = false, axle_tol = hori_axle_tol);
         }
         
-        //translate([0, 0, 15]) rotate([0, 0, 180]) mini_stepper(main_ax_tol = stepper_ax_tol, tol_boxes = tol_boxes);
+        translate([0, 0, 15]) rotate([0, 0, 180]) mini_stepper(main_ax_tol = stepper_ax_tol, tol_boxes = tol_boxes);
     }
 }
 
@@ -149,11 +149,11 @@ module stepper_axle_tols() {
     }
 }
 
-parts_to_print(axle_tol = -0.15, stepper_tol = -0.2);
+parts_to_print(axle_tol = -0.12, stepper_tol = -0.015);
 //stepper_axle_tols();
 
 //mechanism(tol_boxes = false, hori_axle_tol = 0);
-//mechanism(tol_boxes = false, stepper_ax_tol = 0);
+//mechanism(tol_boxes = true, stepper_ax_tol = 0);
 
 //import_mirror(convexity = 1);
 
