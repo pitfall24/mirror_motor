@@ -48,20 +48,45 @@ module normal_tl_gear(for_stepper = false, axle_tol = 0) {
     }
 }
 
-module br_gears(axle_tol = 0) {
-    translate([0, 0, 0]) spur_gear(modul = 0.4, tooth_number = 15, width = 4, bore = 0, optimized = false); // small primary br-axle gear
+module br_gears(axle_tol = 0, stepper_tol = 0) {
+    // ratios: 15:24, 24:12, 12:45, 45:30, 30:15
+    // ==> (24/15) * (45/12) * (15/30) ==> 3:1 (im goated?)
     
-    translate([0, 9, 0]) spur_gear(modul = 0.4, tooth_number = 30, width = 4, bore = 0, optimized = false); // medium secondary gear
-    translate([0, 9, 9]) spur_gear(modul = 0.5, tooth_number = 45, width = 4, bore = 0, optimized = false); // large secondary gear
+    _render("green", false) difference() {
+        spur_gear(modul = 0.4, tooth_number = 15, width = 4, bore = 0, optimized = false); // small primary br-axle gear
+        translate([0, 0, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 6, $fn = 6);
+    }
+
+    _render("green", false) difference() {
+        union() {
+            translate([0, 9, 0]) spur_gear(modul = 0.4, tooth_number = 30, width = 4, bore = 0, optimized = false); // medium secondary gear
+            translate([0, 9, 9]) spur_gear(modul = 0.5, tooth_number = 45, width = 4, bore = 0, optimized = false); // large secondary gear
+        }
+        
+        translate([0, 9, -1]) cylinder(d = 2 * hex_ratio + axle_tol, h = 15, $fn = 6);
+    }
+
+    _render("green", false) difference() {
+        union() {    
+            translate([center_stepper / 2, 23.25, 9]) spur_gear(modul = 0.5, tooth_number = 12, width = 4, bore = 0, optimized = false); // small tertiary gear
+            translate([center_stepper / 2, 23.25, 5]) spur_gear(modul = 0.5, tooth_number = 24, width = 4, bore = 0, optimized = false); // medium tertiary gear
+        }
+        
+        translate([center_stepper / 2, 23.25, 4]) cylinder(d = 2 * hex_ratio + axle_tol, h = 10, $fn = 6);
+    }
     
-    translate([center_stepper / 2, 23.25, 9]) spur_gear(modul = 0.5, tooth_number = 12, width = 4, bore = 0, optimized = false); // small tertiary gear
-    translate([center_stepper / 2, 23.25, 5]) spur_gear(modul = 0.5, tooth_number = 24, width = 4, bore = 0, optimized = false); // medium tertiary gear
+    _render("green", false) difference() {
+        translate([center_stepper, 33, 5]) spur_gear(modul = 0.5, tooth_number = 15, width = 4, bore = 0, optimized = false); // top stepper small gear
+        translate([center_stepper, 33, 0]) rotate([90, 0, 0]) mini_stepper(main_ax_tol = stepper_tol);
+    }
     
-    translate([center_stepper, 33, 5]) spur_gear(modul = 0.5, tooth_number = 15, width = 4, bore = 0, optimized = false);
+    // axles
+    _render("gray", true) translate([0, 9, -3]) cylinder(d = 2 * hex_ratio + axle_tol, h = 19, $fn = 6);
+    _render("gray", true) translate([0, 23.25, 2]) cylinder(d = 2 * hex_ratio + axle_tol, h = 14, $fn = 6);
 }
 
 module mechanism(off_angle = 8, tol_boxes = false, stepper_ax_tol = 0, hori_axle_tol = -0.015, tolerance = 0) {
-    axles(tl_len = 25, br_len = 15, tol_boxes = tol_boxes, tol = hori_axle_tol); // main controlling axles
+    axles(tl_len = 20, br_len = 15, tol_boxes = tol_boxes, tol = hori_axle_tol); // main controlling axles
     
     tl_hyp = sqrt(15 * 15 + center_stepper * center_stepper);
     tl_angle = abs(atan(15 / center_stepper));
@@ -71,7 +96,7 @@ module mechanism(off_angle = 8, tol_boxes = false, stepper_ax_tol = 0, hori_axle
     
     // bottom-right gear train
     translate([21.85, -6, 3.556]) {
-        _render("green", false) translate([0, -0.5, 0]) rotate([90, 0, 0]) br_gears(axle_tol = hori_axle_tol);
+        translate([0, -0.5, 0]) rotate([90, 0, 0]) br_gears(axle_tol = hori_axle_tol);
         
         translate([center_stepper, 3, 33]) rotate([0, 180, 180]) mini_stepper(main_ax_tol = stepper_ax_tol, tol_boxes = tol_boxes);
     }
@@ -87,7 +112,6 @@ module mechanism(off_angle = 8, tol_boxes = false, stepper_ax_tol = 0, hori_axle
         }
         
         translate([-center_stepper, 3, 15 * sin(tl_angle)]) rotate([0, 180, 180]) mini_stepper(main_ax_tol = stepper_ax_tol, tol_boxes = tol_boxes);
-        echo(tl_angle);
     }
 }
 
