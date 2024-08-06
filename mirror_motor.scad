@@ -137,17 +137,25 @@ module mechanism_mount() {
     top_le_main_ax = [3.556, 0, 21.85];
     bot_ri_main_ax = [21.85, 0, 3.556];
     
-    off_angle = 8;
+    center_stepper = 0.853;
     
     // pulled out for convenience
     module bearings() {
         color("lime", 0.5) {
-            translate(top_le_main_ax + [0, -3.65, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 10.2); // top-left inner
-            translate(top_le_main_ax + [0, -18.1, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left outer
+            translate(top_le_main_ax + [0, -3.65, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 7.25); // top-left inner
+            translate(top_le_main_ax + [0, -15.1, 0]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left outer
             
-            translate(top_le_main_ax + [0, -18.1, 15]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left motor axle
+            translate(top_le_main_ax + [-center_stepper, -15.1, 15]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // top-left motor axle
+            translate(top_le_main_ax + [-center_stepper, -9, 15]) rotate([90, 0, 0]) cylinder(d = 7, h = 1.9); // top-left motor axle stabilizer
             
-            translate(bot_ri_main_ax) rotate([0, off_angle, 0]) translate([0, -15, 8.7]) cylinder(d = 8, h = 9.135); // bottom_right motor axle
+            translate(bot_ri_main_ax + [center_stepper, -15.6, 33]) rotate([90, 0, 0]) cylinder(d = 7, h = 7); // bot_ri motor axle
+            translate(bot_ri_main_ax + [center_stepper, -9.5, 33]) rotate([90, 0, 0]) cylinder(d = 7, h = 1.9); // bot_ri motor axle stabilizer
+            
+            translate(bot_ri_main_ax + [center_stepper / 2, -19.6, 23.25]) rotate([90, 0, 0]) cylinder(d = 7, h = 5); // bot_ri tertiary gears
+            translate(bot_ri_main_ax + [center_stepper / 2, -5.4, 23.25]) rotate([90, 0, 0]) cylinder(d = 7, h = 6); // bot_ri tertiary gears
+            
+            translate(bot_ri_main_ax + [0, -19.6, 9]) rotate([90, 0, 0]) cylinder(d = 7, h = 5); // bot_ri tertiary gears
+            translate(bot_ri_main_ax + [0, -10.6, 9]) rotate([90, 0, 0]) cylinder(d = 7, h = 4.8); // bot_ri tertiary gears
         }
     }
     
@@ -155,15 +163,21 @@ module mechanism_mount() {
         union() {
             // --- supporting bases, braces, and platforms ---
             color("plum") {
-                translate([13, -27, 0]) beveled_cube([12.5, 7.5, 7], [0, 1, 0], 0.5); // outer bottom-right axle brace/bearing
-                translate([13, -8.21, 0]) beveled_cube([12.5, 3.81, 7], [0, 1, 0], 0.5); // inner bottom-right axle brace/bearing
-                translate([15.5, -23.5, 0]) cube([2, 19.3, 7]); // connector
+                translate([11, -15.4, 0]) beveled_cube([14.5, 4.8, 7], [0, 1, 0], 0.5); // outer bottom-right axle brace/bearing
+                translate([11, -6.4, 0]) beveled_cube([14.5, 2.3, 16], [0, 1, 0], 0.21875); // inner bottom-right axle brace/bearing
+                
+                translate([11, -6.3, 7]) beveled_cube([14.5, 4.5, 9], [0, 1, 0], 0.35);
                 
                 // main lower platform
-                translate([-4.05, -27, 0]) cube([20, 26.5, 7]);
+                translate([-4.05, -15.4, 0]) cube([20, 14.9, 7]);
+                translate([-4.05, -25, 0]) cube([14, 9.8, 7]);
                 
                 // diagonal brace
-                translate([-0.55, -0.5, 0]) rotate([0, -90, 0]) linear_extrude(height = 3.5) polygon(points = [ [21.7, 0], [0, -20], [0, 0] ]);
+                translate([-0.55, -0.5, 0]) rotate([0, -90, 0]) linear_extrude(height = 3.5) polygon(points = [ [21.7, 0], [0, -18], [0, 0] ]);
+                
+                // flat plate connector
+                translate([5, -22.7, 4]) cube([18, 2.5, 36.2]);
+                translate([0.056, -25, 30]) cube([22.944, 4, 4]);
             }
             
             // --- bearings ---
@@ -172,27 +186,41 @@ module mechanism_mount() {
             // --- supports ---
             difference() {
                 color("peru") union() {
-                    translate(top_le_main_ax + [0, -9, 15]) rotate([-90, 0, 0]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
-                    
-                    translate(bot_ri_main_ax + [0, -15, 0]) rotate([0, off_angle, 0]) {
-                        translate([0, 0, 20.135]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
-                        
-                        translate([-5, -12, -1]) cube([8.78, 7.5, 18.635]); // bottom-right motor outer support
-                        translate([-5, 6.79, -1]) cube([8.78, 3.81, 18.635]); // bottom-right motor inner support
-                        translate([-12, -4.5, -1]) cube([7.5, 9, 18.635]); // bottom-right motor left support
-                        translate([-5.1, -4.6, 9]) cube([7, 7, 2]); // bottom-right motor axle bearing stabilizer
-                        
-                        translate([-19, -10.1, 16]) cube([7, 7, 7]);
+                    difference() {
+                        translate([top_le_main_ax[0] - center_stepper, -3, top_le_main_ax[2] + 14.9758]) rotate([-90, 0, 0]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
+                        translate([13, -7, 24]) cube([5, 9, 25]);
+                        translate(top_le_main_ax + [0, 2, -3]) rotate([90, 0, 0]) cylinder(d = 15, h = 4);
                     }
                     
-                    translate([11.4, -2, 15.5]) cube([3, 12, 11.35]); // top-left motor right support
-                    translate([-4.05, -2, 20]) cube([4.05, 8, 6.85]); // top-left motor left support
-                    translate([-4.05, -5, 25.5]) cube([18.45, 15, 1.35]); // top-left motor middle support
+                    difference() {
+                        translate([bot_ri_main_ax[0] + center_stepper, -3, bot_ri_main_ax[2] + 33]) rotate([-90, 0, 0]) motor_holder(securing_ring_tol = 0, screw_tol = 0);
+                        translate([10, -7, 24]) cube([2, 9, 25]);
+                    }
                     
-                    translate([0.056, -13.85, 7]) cube([7, 10.2, 14.85]); // top-left motor inner bearing support
+                    translate([0.056, -10.9, 7]) cube([7, 7.25, 14.85]); // top-left motor inner bearing support
                     translate([0.056, -3.65, 7]) cube([7, 1.65, 10]);
-                    translate([0.056, -25.1, 7]) cube([7, 7, 41.85]); // top-left motor outer bearings support
-                    translate([0.056, -25.1, 46.85]) cube([7, 20.1, 5]); // upper connector
+                    translate([0.056, -22.1, 7]) cube([7, 7, 40]); // top-left motor outer bearings support
+                    
+                    translate([0.056, -15.3, 42]) cube([7, 10, 5]); // top connecting support
+                    
+                    translate([0.056, -10.8, 21]) cube([7, 1.7, 24]); // thin vertical inner support
+                    translate([1.5, -10, 24.9]) cube([3, 4.2, 9]); // support for thin vertical inner support
+                    
+                    translate([-4.05, -6, 14]) cube([3.5, 7, 14]); // top-left motor holder support
+                    translate([12, -6.4, 14]) cube([12, 4.6, 10.7]); // bottom right main motor holder support
+                    
+                    translate([21.85 + center_stepper, -5.9, 36.556]) rotate([90, 0, 0]) difference() { // hollow tube support at top-right
+                        cylinder(d = 8, h = 4.5);
+                        translate([0, 0, -1]) cylinder(d = 6, h = 6.5);
+                    }
+                    
+                    translate([21.85 + center_stepper - 2, -20, 39]) { // top-right connecting stabilizer
+                        cube([4, 4, 3]);
+                        translate([0, 9, 0]) cube([4, 4, 3]);
+                        translate([0, 0, 2.9]) cube([4, 13, 3]);
+                    }
+                    
+                    translate([21.85 - 3.45, -15.35, 4]) cube([6.9, 4, 9]);
                 }
                 
                 bearings();
@@ -200,12 +228,7 @@ module mechanism_mount() {
         }
         
         // difference operations between such complicated meshes is quite expensive (theyre no longer *that* complicated)
-        mechanism(off_angle = off_angle, tol_boxes = true, stepper_ax_tol = 0.1);
-        
-        translate(bot_ri_main_ax + [0, -15, 0]) rotate([0, off_angle, 0]) { // holes for allen-key for screws
-            translate([-8, -8, -6]) cylinder(d = 2, h = 10);
-            translate([-8, 8, -6]) cylinder(d = 2, h = 10);
-        }
+        mechanism(tol_boxes = true, stepper_ax_tol = 0.1);
         
         translate([-5, -30, -1]) cube([40, 40, 1.1]); // maybe remove some material from the very bottom for clearance
     }
@@ -213,13 +236,12 @@ module mechanism_mount() {
 
 //motor_holder(securing_ring_tol = 0.1, screw_tol = 0.1);
 
-import_mirror(convexity = 1);
+//import_mirror(convexity = 1);
 
 _render("red") mount();
 mechanism_mount();
 
-//_render("orange") mechanism(tol_boxes = false);
-mechanism();
+mechanism(tol_boxes = false);
 
 
 
