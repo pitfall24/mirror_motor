@@ -187,12 +187,12 @@ module stepper_axle_tols() {
     }
 }
 
-parts_to_print(axle_tol = -0.14, stepper_tol = -0.03);
+//parts_to_print(axle_tol = -0.14, stepper_tol = -0.03);
 
-//mechanism(tol_boxes = false);
+mechanism(tol_boxes = false);
 //mechanism(tol_boxes = true, stepper_ax_tol = 0);
 
-//import_mirror(convexity = 1);
+ import_mirror(convexity = 1);
 
 
 

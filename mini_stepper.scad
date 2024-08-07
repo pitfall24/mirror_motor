@@ -8,7 +8,7 @@ $fn = 64;
 
 use<util.scad>;
 
-module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, tol_boxes = false) {
+module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, len_tol = 0.5, tol_boxes = false) {
     _render("dimgray") translate([-10, -30, -10]) if (tol_boxes) { // body
         cube([20, 30, 20]);
     } else {
@@ -17,7 +17,7 @@ module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, tol_boxes = false) {
     _render("darkgray") translate([0, -0.1, 0]) rotate([-90, 0, 0]) cylinder(d = 15 + securing_ring_tol, h = 1.6 + securing_ring_tol / 2); // securing ring
     
     _render("silver", false) difference() { // main axle
-        translate([0, 1.4, 0]) rotate([-90, 0, 0]) cylinder(d = 4 + main_ax_tol, h = 13.6 + main_ax_tol / 2);
+        translate([0, 1.4, 0]) rotate([-90, 0, 0]) cylinder(d = 4 + main_ax_tol, h = 13.6 + main_ax_tol / 2 + (tol_boxes ? len_tol : 0));
         
         if (!tol_boxes) {
             translate([-3, 3, -3 - main_ax_tol / 2]) cube([6, 12.1, 1.5]); // flat face
