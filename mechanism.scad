@@ -107,7 +107,7 @@ module br_gears(axle_tol = 0, stepper_tol = 0, tol_boxes = false) {
 }
 
 module mechanism(tol_boxes = false, stepper_ax_tol = 0, hori_axle_tol = -0.015, tolerance = 0) {
-    axles(tl_len = 20, br_len = 14.7, tol_boxes = tol_boxes, tol = hori_axle_tol); // main controlling axles
+    axles(tl_len = 20, br_len = 14.7, tol_boxes = tol_boxes, tol = hori_axle_tol - 0.01); // main controlling axles
     
     tl_hyp = sqrt(15 * 15 + center_stepper * center_stepper);
     tl_angle = abs(atan(15 / center_stepper));
@@ -187,12 +187,11 @@ module stepper_axle_tols() {
     }
 }
 
-//parts_to_print(axle_tol = -0.14, stepper_tol = -0.03);
+parts_to_print(axle_tol = -0.18, stepper_tol = -0.04);
 
-mechanism(tol_boxes = false);
+//mechanism(tol_boxes = false);
 //mechanism(tol_boxes = true, stepper_ax_tol = 0);
-
- import_mirror(convexity = 1);
+//import_mirror(convexity = 1);
 
 
 

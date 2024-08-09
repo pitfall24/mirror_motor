@@ -1,64 +1,64 @@
-#include <AccelStepper.h>
+#include "manager.cpp"
 
 #define ENABLE_PIN 8
 
-#define X_STEP_PIN 2
-#define X_DIR_PIN 5
+#define LOG_LEN 50
+#define BUF_LEN 50
 
-#define Y_STEP_PIN 3
-#define Y_DIR_PIN 6
+Manager mirror1 = NULL;
+Manager mirror2 = NULL;
 
-#define Z_STEP_PIN 4
-#define Z_DIR_PIN 7
+char buffer[BUF_LEN];
+char cmd_log[LOG_LEN];
+int log_ind = 0;
 
-#define A_STEP_PIN 12
-#define A_DIR_PIN 13
+typedef enum {
+  REGISTERING,
+  RUNNING,
+  SLEEPING,
+} Mode;
 
-AccelStepper xStepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
-AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
-//AccelStepper zStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
-//AccelStepper aStepper(AccelStepper::DRIVER, A_STEP_PIN, A_DIR_PIN);
+Mode mode;
 
-AccelStepper* steppers[] = {&xStepper, &yStepper};
-char labels[] = {'x', 'y'};
-
-int maxSpeed = 800; // 1 rev / s
-int maxAccel = 10000;
-
-int xTarg = 8000; // 10 rotations
-int yTarg = 4000; // 5 rotations
+bool man_exists(Manager man) {
+  return &man != NULL;
+}
 
 void setup() {
   Serial.begin(115200);
 
-  pinMode(ENABLE_PIN, HIGH);
-
-  xStepper.setMaxSpeed(maxSpeed);
-  xStepper.setAcceleration(maxAccel);
-
-  yStepper.setMaxSpeed(maxSpeed);
-  yStepper.setAcceleration(maxAccel);
-
-  //zStepper.setMaxSpeed(maxSpeed);
-  //zStepper.setAcceleration(maxAccel);
-
-  //aStepper.setMaxSpeed(maxSpeed);
-  //aStepper.setAcceleration(maxAccel);
-
-  xStepper.moveTo(xTarg);
-  yStepper.moveTo(yTarg);
+  mode = Mode::RUNNING;
 }
 
 void loop() {
-  for (int i = 0; i < sizeof(steppers) / sizeof(steppers[0]); i++) {
-    AccelStepper* stepper = steppers[i];
-    char name = labels[i];
-
-    if (stepper->distanceToGo() == 0) {
-      stepper->moveTo(stepper->currentPosition() == 0 ? (name == 'x' ? xTarg : yTarg) : 0);
-    }
+  if (!Serial.available() && mode != Mode::SLEEPING) {
+    goto update;
   }
 
-  xStepper.run();
-  yStepper.run();
+  char next = Serial.peek();
+
+  update:
+  if (man_exists(mirror1)) {
+    mirror1.update();
+  }
+
+  if (man_exists(mirror2)) {
+    mirror2.update();
+  }
+}
+
+bool send_char(char ch) {
+  Serial.write(ch);
+}
+
+int read_char() {
+  return Serial.read();
+}
+
+int cor_log_ind(int ind) {
+  if (ind < 0) {
+    return ind + LOG_LEN;
+  } else {
+    return ind % LOG_LEN;
+  }
 }

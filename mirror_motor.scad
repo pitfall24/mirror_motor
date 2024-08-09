@@ -105,7 +105,7 @@ module mount() {
             outer_walls();
         }
         
-        securing_bolt_pos() securing_bolt(dia_tol = -0.32); // securing bolt tolerance here !!
+        securing_bolt_pos() securing_bolt(dia_tol = -0.7); // securing bolt tolerance here !!
     }
     
     color("blue") difference() {
@@ -170,7 +170,7 @@ module mechanism_mount() {
                 
                 // main lower platform
                 translate([-4.05, -15.4, 0]) cube([20, 14.9, 7]);
-                translate([-4.05, -25, 0]) cube([14, 9.8, 7]);
+                translate([-4.05, -23, 0]) cube([14, 7.8, 7]);
                 
                 // diagonal brace
                 translate([-0.55, -0.5, 0]) rotate([0, -90, 0]) linear_extrude(height = 3.5) polygon(points = [ [21.7, 0], [0, -18], [0, 0] ]);
@@ -216,11 +216,17 @@ module mechanism_mount() {
                     
                     translate([21.85 + center_stepper - 2, -20, 39]) { // top-right connecting stabilizer
                         cube([4, 4, 3]);
-                        translate([0, 9, 0]) cube([4, 4, 3]);
-                        translate([0, 0, 2.9]) cube([4, 13, 3]);
+                        translate([0, 9, 0]) cube([4, 5.5, 3]);
+                        translate([0, 0, 2.9]) cube([4, 14.5, 3]);
                     }
                     
-                    translate([21.85 - 3.45, -15.35, 4]) cube([6.9, 4, 9]);
+                    translate([21.85 - 3.45, -15.35, 4]) cube([6.9, 4, 9]); // bottom right secondary gear support
+                    
+                    // strengthening
+                    translate([3.556 - center_stepper - 12, -6, 48.5]) cube([44, 7, 3]);
+                    translate([-4, 1, 24.826]) rotate([90, 0, 0]) linear_extrude(height = 7) polygon(points = [ [-5.297, 0], [0, -12], [0, 0] ]);
+                    translate([23.99, -1.8, 24.56]) rotate([90, 0, 0]) linear_extrude(height = 4.2) polygon(points = [ [10.71, 0], [0, -12], [0, 0] ]);
+                    translate([12, -1.82, 10]) cube([6, 2, 14.6]);
                 }
                 
                 bearings();
@@ -231,6 +237,13 @@ module mechanism_mount() {
         mechanism(tol_boxes = true, stepper_ax_tol = 0.1);
         
         translate([-5, -30, -1]) cube([40, 40, 1.1]); // maybe remove some material from the very bottom for clearance
+        
+        // screw holes
+        translate([3.556 - center_stepper + 8, -30, 28.825]) rotate([-90, 0, 0]) cylinder(d = 2, h = 20);
+        translate([21.85 + center_stepper - 8, -30, 28.556]) rotate([-90, 0, 0]) cylinder(d = 2, h = 20);
+        
+        // motor holder fix
+        translate([12, -3, 26.8257]) cube([2, 5, 19.7305]);
     }
 }
 
@@ -238,10 +251,12 @@ module mechanism_mount() {
 
 //import_mirror(convexity = 1);
 
-_render("red") mount();
-mechanism_mount();
+mirror([1, 0, 0]) {
+    _render("red") mount();
+    mechanism_mount();
+}
 
-mechanism(tol_boxes = false);
+//mechanism(tol_boxes = false);
 
 
 

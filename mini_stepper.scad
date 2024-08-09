@@ -8,7 +8,7 @@ $fn = 64;
 
 use<util.scad>;
 
-module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, len_tol = 0.5, tol_boxes = false) {
+module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, len_tol = 0.75, tol_boxes = false) {
     _render("dimgray") translate([-10, -30, -10]) if (tol_boxes) { // body
         cube([20, 30, 20]);
     } else {
