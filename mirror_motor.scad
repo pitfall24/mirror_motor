@@ -105,6 +105,7 @@ module mount() {
             outer_walls();
         }
         
+        // -0.7 if you are planning on tapping the hole, -0.4 (ish) otherwise
         securing_bolt_pos() securing_bolt(dia_tol = -0.7); // securing bolt tolerance here !!
     }
     
@@ -178,6 +179,7 @@ module mechanism_mount() {
                 // flat plate connector
                 translate([5, -22.7, 4]) cube([18, 2.5, 36.2]);
                 translate([0.056, -25, 30]) cube([22.944, 4, 4]);
+                translate([0.056, -25, 4]) cube([22.944, 4, 5]);
             }
             
             // --- bearings ---
@@ -251,7 +253,7 @@ module mechanism_mount() {
 
 //import_mirror(convexity = 1);
 
-mirror([1, 0, 0]) {
+mirror([0, 0, 0]) {
     _render("red") mount();
     mechanism_mount();
 }

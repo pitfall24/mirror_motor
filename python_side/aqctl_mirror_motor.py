@@ -26,6 +26,13 @@ def get_argparser():
     )
     
     parser.add_argument(
+        '--timeout',
+        help='Timeout duration for communication.',
+        default=0.1,
+        type=float,
+    )
+    
+    parser.add_argument(
         '--name',
         help='Name of the arduino/mirror motor you are addressing, for convinience.',
         default='test',
@@ -38,7 +45,7 @@ def main():
     args = get_argparser().parse_args()
     common_args.init_logger_from_args(args)
     
-    dev = MirrorMotor(args.serial_port)
+    dev = MirrorMotor(serial_port=args.serial_port, timeout=args.timeout)
     
     try:
         print('creating server loop')

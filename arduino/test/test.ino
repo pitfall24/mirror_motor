@@ -22,11 +22,11 @@ AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
 AccelStepper* steppers[] = {&xStepper, &yStepper};
 char labels[] = {'x', 'y'};
 
-int maxSpeed = 800; // 1 rev / s
-int maxAccel = 10000;
+int maxSpeed = 600; // 1 rev / s
+int maxAccel = 2000;
 
-int xTarg = 8000; // 10 rotations
-int yTarg = 4000; // 5 rotations
+int xTarg = 1200; // 1.5 rotations
+int yTarg = 800; // 1 rotation
 
 void setup() {
   Serial.begin(115200);
