@@ -6,6 +6,28 @@ from sipyco.pc_rpc import simple_server_loop
 from sipyco import common_args
 from driver import MirrorMotor
 
+class AttributeProxy:
+    def __init__(self, obj):
+        self._obj = obj
+    
+    def get_attr(self, path):
+        attr = self._obj
+        #print(f'Getting attribute path: `{path}`')
+        
+        if path == '':
+            return attr
+        
+        for part in path.strip().strip('.').strip().split('.'):
+            #print(f'Trying to get part: `{part}`')
+            attr = getattr(attr, part)
+        
+        return attr
+    
+    def call_method(self, path, method, *args, **kwargs):
+        attr = self.get_attr(path)
+        
+        return getattr(attr, method)(*args, **kwargs)
+
 def get_argparser():
     parser = ArgumentParser(
         description='ARTIQ controller for mirror motor',
@@ -46,11 +68,18 @@ def main():
     common_args.init_logger_from_args(args)
     
     dev = MirrorMotor(serial_port=args.serial_port, timeout=args.timeout)
+    proxy = AttributeProxy(dev)
+    
+    objects = {
+        'mirror_motor': proxy,
+    }
+    
+    print(f'Exposing objects: {objects}')
     
     try:
         print('creating server loop')
         simple_server_loop(
-            {'mirror_motor': dev},
+            objects,
             common_args.bind_address_from_args(args),
             args.port,
         )
