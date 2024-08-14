@@ -17,6 +17,7 @@ public:
   int stored_moves;
   int ind;
   int undoes;
+  StepperAxisType ax;
 
   int cor_ind(int _ind);
 
@@ -26,8 +27,8 @@ public:
   void setMaxSpeed(float speed);
   void setMaxAccel(float accel);
 
-  void forward(int steps);
-  void backward(int steps);
+  void forward(long steps);
+  void backward(long steps);
   void stop();
 
   bool undo();

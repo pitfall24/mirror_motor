@@ -44,8 +44,8 @@ int MirrorMotor::cor_ind(int _ind) {
 MirrorMotor::MirrorMotor(int stepPin, int dirPin) {
   this->stepper = AccelStepper(AccelStepper::DRIVER, stepPin, dirPin);
 
-  this->stepper.setMaxSpeed(800);
-  this->stepper.setAcceleration(8000);
+  this->stepper.setMaxSpeed(600.0);
+  this->stepper.setAcceleration(2000.0);
 
   this->stored_moves = sizeof(this->prev_pos) / sizeof(this->prev_pos[0]);
   this->ind = 0;
@@ -58,6 +58,7 @@ MirrorMotor::MirrorMotor(StepperAxis axis) {
   this->stored_moves = sizeof(this->prev_pos) / sizeof(this->prev_pos[0]);
   this->ind = 0;
   this->undoes = 0;
+  this->ax = axis;
 }
 
 void MirrorMotor::setMaxSpeed(float speed) {
@@ -68,7 +69,7 @@ void MirrorMotor::setMaxAccel(float accel) {
   this->stepper.setAcceleration(accel);
 }
 
-void MirrorMotor::forward(int steps) {
+void MirrorMotor::forward(long steps) {
   this->prev_pos[ind] = this->stepper.currentPosition();
   this->ind = (this->ind + 1) % this->stored_moves;
 
@@ -76,7 +77,7 @@ void MirrorMotor::forward(int steps) {
   this->stepper.move(-steps);
 }
 
-void MirrorMotor::backward(int steps) {
+void MirrorMotor::backward(long steps) {
   this->prev_pos[ind] = this->stepper.currentPosition();
   this->ind = (this->ind + 1) % this->stored_moves;
 
@@ -113,7 +114,5 @@ bool MirrorMotor::redo() {
 }
 
 bool MirrorMotor::update() {
-  this->stepper.run();
-
-  return this->stepper.isRunning();
+  return this->stepper.run();
 }

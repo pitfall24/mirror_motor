@@ -25,8 +25,12 @@ class AttributeProxy:
     
     def call_method(self, path, method, *args, **kwargs):
         attr = self.get_attr(path)
+        func = getattr(attr, method)
         
-        return getattr(attr, method)(*args, **kwargs)
+        if callable(func):
+            return func(*args, **kwargs)
+        else:
+            return func
 
 def get_argparser():
     parser = ArgumentParser(
