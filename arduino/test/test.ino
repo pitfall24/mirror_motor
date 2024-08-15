@@ -1,5 +1,4 @@
 #include <AccelStepper.h>
-#include <avr/wdt.h>
 
 #define ENABLE_PIN 8
 
@@ -16,12 +15,12 @@
 #define A_DIR_PIN 13
 
 AccelStepper xStepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
-//AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
 //AccelStepper zStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
 //AccelStepper aStepper(AccelStepper::DRIVER, A_STEP_PIN, A_DIR_PIN);
 
-AccelStepper* steppers[] = {&xStepper};//, &yStepper};
-char labels[] = {'x'};
+AccelStepper* steppers[] = {&xStepper, &yStepper};
+char labels[] = {'x', 'y'};
 
 int maxSpeed = 600; // 1 rev / s
 int maxAccel = 5000;
@@ -39,8 +38,8 @@ void setup() {
   xStepper.setMaxSpeed(maxSpeed);
   xStepper.setAcceleration(maxAccel);
 
-  //yStepper.setMaxSpeed(maxSpeed);
-  //yStepper.setAcceleration(maxAccel);
+  yStepper.setMaxSpeed(maxSpeed);
+  yStepper.setAcceleration(maxAccel);
 
   //zStepper.setMaxSpeed(maxSpeed);
   //zStepper.setAcceleration(maxAccel);
@@ -48,10 +47,8 @@ void setup() {
   //aStepper.setMaxSpeed(maxSpeed);
   //aStepper.setAcceleration(maxAccel);
 
-  xStepper.move(xTarg);
-  //yStepper.moveTo(yTarg);
-
-  num_updates = 0;
+  xStepper.moveTo(xTarg);
+  yStepper.moveTo(yTarg);
 }
 
 void loop() {
@@ -60,28 +57,10 @@ void loop() {
     char name = labels[i];
 
     if (stepper->distanceToGo() == 0) {
-      stepper->move(stepper->currentPosition() == 0 ? (name == 'x' ? xTarg : yTarg) : -xTarg);
+      stepper->moveTo(stepper->currentPosition() == 0 ? (name == 'x' ? xTarg : yTarg) : 0);
     }
   }
 
   xStepper.run();
-  //yStepper.run();
-
-  num_updates += 1;
-
-  if (Serial.available()) {
-    char next = Serial.read();
-    if (next == 'j') {
-      Serial.print(num_updates, DEC);
-    }
-
-    if (next == 'Q') {
-      reboot();
-    }
-  }
-}
-
-void reboot() {
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
+  yStepper.run();
 }

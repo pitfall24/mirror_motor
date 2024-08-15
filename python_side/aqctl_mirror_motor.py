@@ -31,6 +31,11 @@ class AttributeProxy:
             return func(*args, **kwargs)
         else:
             return func
+    
+    def reboot(self):
+        self._obj.reboot()
+        
+        self._obj = MirrorMotor(serial_port=self._obj.serial_port, timeout=self._obj.timeout)
 
 def get_argparser():
     parser = ArgumentParser(

@@ -56,6 +56,8 @@ class MirrorMotor:
         
         self.arduino = serial.Serial(port=self.serial_port, baudrate=self.baudrate, timeout=self.timeout)
         
+        self.sleeping = False
+        
         print('MirrorMotor instantiated and serial connection made')
     
     def register(self, mirror, axis):
@@ -66,8 +68,11 @@ class MirrorMotor:
             raise ValueError(f'Variables "axis" must be "x", "y", "z", or "a", not {axis}')
         
         if hasattr(self, mirror):
-            if hasattr(mirror, axis):
-                raise ValueError(f'Axis {axis} for mirror {mirror} already registered')
+            mir_ob = getattr(self, mirror)
+            if hasattr(mir_ob, axis):
+                 u = f'Axis {axis} for mirror {mirror} already registered'
+                 print(u)
+                 return u
             
             axis_obj = AxisObject(self, mirror, axis)
             setattr(getattr(self, mirror), axis, axis_obj)
@@ -81,36 +86,51 @@ class MirrorMotor:
         self.write_char('S')
         res, _ = self.wait_for_char('1')
         if not res:
-            raise Exception(f'Failed to sleep. It may be already asleep.')
+            if self.sleeping:
+                u = 'Failed to sleep since it is likely already asleep.'
+                print(u)
+                return u
+            else:
+                raise Exception(f'Failed to sleep. It may be already asleep.')
+        else:
+            self.sleeping = True
     
     def wake(self):
         self.write_char('W')
         res, _ = self.wait_for_char('1')
         if not res:
-            raise Exception(f'Failed to wake. It may be already awake.')
+            if not self.sleeping:
+                u = 'Failed to wake likely because it is already awake.'
+                print(u)
+                return u
+            else:
+                raise Exception(f'Failed to wake. It may be already awake.')
+        else:
+            self.sleeping = False
     
     def cancel_all(self):
         self.write_char('F')
         _, got = self.wait_for_char('1')
         if got != '1':
-            raise Exception(f'Failed to cancel tasks. got {got}')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Failed to cancel tasks.')
     
     def reboot(self):
         self.write_char('Q')
+        sleep(0.01)
         # we can't really expect it to be able to return anything after this
-        # we also have to reset all preconcieved states on this end
-        self = MirrorMotor(serial_port=self.serial_port, baudrate=self.baudrate, timeout=self.timeout)
+        # we also have to reset all preconcieved states on this end which is done by the AttributeProxy class
     
     def get_log(self):
         self.write_char('L')
         log = self.read_chars(num=25)
         
-        res = f'Log (most recent LAST) (length {len(log)}: {log}.'
+        res = f'Log (most recent LAST) (length {len(log)}): {log}.'
         
         print(res)
         return res
     
-    def status(self):
+    def status(self): # add more status options in the future
         self.write_char('P')
         _, got = self.wait_for_char('1')
         if got is None:
@@ -125,6 +145,7 @@ class MirrorMotor:
         elif got == '4':
             stat = f'Status is registering'
         else:
+            print(f'Got {got} from arduino.')
             stat = f'Status returned an unexpected value'
         
         print(stat)
@@ -153,7 +174,7 @@ class MirrorMotor:
         self.arduino.write(f'{char}'.encode())
     
     def write_num(self, num):
-        self.arduino.write(num.to_bytes(4, 'little'))
+        self.arduino.write(num.to_bytes(4, 'little', signed=True))
     
     def wait_for_char(self, char):
         start = monotonic()
@@ -193,7 +214,7 @@ class MirrorInterface:
         elif name == 'status':
             return self.status
         else:
-            raise Exception(f'Method {name}() doesn\'t exist.')
+            raise AttributeError(f'Method {name}() doesn\'t exist.')
     
     '''
     Undo a move - 
@@ -205,15 +226,22 @@ class MirrorInterface:
         self.mm_instance.write_char('U')
         res, _ = self.axis.wait_for_char('1')
         if not res:
-            raise Exception(f'Failed to undo move for mirror {self.mirror} while confirming communication.')
+            if self.mm_instance.sleeping:
+                u = f'Failed to undo move for axis {self.axis.axis} on mirror {self.mirror} while confirming communication (probably sleeping).'
+                print(u)
+                return u
+            else:
+                raise Exception(f'Failed to undo move for axis {self.axis.axis} on mirror {self.mirror} while confirming communication.')
         
         self.mm_instance.write_char(self.mirror)
         res, got = self.axis.wait_for_char('2')
         if got == '3':
-            raise Exception(f'Axis {self.axis} or mirror {self.mirror} doesn\'t exist while redoing')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Axis {self.axis.axis} or mirror {self.mirror} doesn\'t exist while undoing')
         
         if got != '2' or not res:
-            raise Exception(f'Failed to send mirror assignment to axis {self.axis} on mirror {self.mirror}.')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Failed to send mirror assignment to axis {self.axis.axis} on mirror {self.mirror}.')
     
     '''
     Redo an undone move - 
@@ -225,15 +253,22 @@ class MirrorInterface:
         self.mm_instance.write_char('T')
         res, _ = self.axis.wait_for_char('1')
         if not res:
-            raise Exception(f'Failed to redo move for axis {self.axis} on mirror {self.mirror} while confirming communication.')
+            if self.mm_instance.sleeping:
+                u = f'Failed to redo move for axis {self.axis.axis} on mirror {self.mirror} while confirming communication (probably sleeping).'
+                print(u)
+                return u
+            else:
+                raise Exception(f'Failed to redo move for axis {self.axis.axis} on mirror {self.mirror} while confirming communication.')
         
         self.mm_instance.write_char(self.mirror)
         res, got = self.axis.wait_for_char('2')
         if got == '3':
-            raise Exception(f'Axis {self.axis} or mirror {self.mirror} doesn\'t exist while redoing')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Axis {self.axis.axis} or mirror {self.mirror} doesn\'t exist while redoing')
         
         if got != '2' or not res:
-            raise Exception(f'Failed to send mirror assignment to axis {self.axis} on mirror {self.mirror}.')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Failed to send mirror assignment to axis {self.axis.axis} on mirror {self.mirror}.')
 
 class AxisObject:
     '''
@@ -268,7 +303,8 @@ class AxisObject:
         
         res, got = self.wait_for_char('2')
         if got != '2':
-            raise Exception(f'Axis {self.axis} has already been taken (on the arduino), got {got}.')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Axis {self.axis} has already been taken (on the arduino).')
         
         if not res:
             raise Exception(f'Failed to register axis {self.axis} while transmitting axis.')
@@ -294,7 +330,8 @@ class AxisObject:
         self.mm_instance.write_char(direction)
         res, got = self.wait_for_char('1')
         if got != '1':
-            raise Exception(f'Axis {self.axis} on mirror {self.mirror} doesn\'t exist. got {got}')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Axis {self.axis} on mirror {self.mirror} doesn\'t exist.')
         
         if not res:
             raise Exception(f'Failed to move axis {self.axis} on mirror {self.mirror} while confirming assignment.')
@@ -302,7 +339,8 @@ class AxisObject:
         self.mm_instance.write_num(steps)
         res, got = self.wait_for_char('2')
         if got != '2' or not res:
-            raise Exception(f'Failed to send {steps} steps to axis {self.axis} on mirror {self.mirror}. got {got}')
+            print(f'Got {got} from arduino.')
+            raise Exception(f'Failed to send {steps} steps to axis {self.axis} on mirror {self.mirror}.')
     
     def wait_for_char(self, char):
         start = monotonic()

@@ -41,19 +41,11 @@ int MirrorMotor::cor_ind(int _ind) {
   }
 }
 
-MirrorMotor::MirrorMotor(int stepPin, int dirPin) {
-  this->stepper = AccelStepper(AccelStepper::DRIVER, stepPin, dirPin);
+MirrorMotor::MirrorMotor(StepperAxis axis) {
+  this->stepper = AccelStepper(AccelStepper::DRIVER, getStepPin(axis), getDirPin(axis));
 
   this->stepper.setMaxSpeed(600.0);
   this->stepper.setAcceleration(2000.0);
-
-  this->stored_moves = sizeof(this->prev_pos) / sizeof(this->prev_pos[0]);
-  this->ind = 0;
-  this->undoes = 0;
-}
-
-MirrorMotor::MirrorMotor(StepperAxis axis) {
-  this->stepper = AccelStepper(AccelStepper::DRIVER, getStepPin(axis), getDirPin(axis));
 
   this->stored_moves = sizeof(this->prev_pos) / sizeof(this->prev_pos[0]);
   this->ind = 0;

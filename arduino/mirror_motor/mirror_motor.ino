@@ -1,5 +1,6 @@
 #include "manager.cpp"
 #include <avr/wdt.h>
+#include <stdlib.h>
 
 #define ENABLE_PIN 8
 #define LOG_LEN 25
@@ -8,6 +9,9 @@ using StepperAxis = MirrorMotor::StepperAxisType;
 
 Manager mirrorA = NULL;
 Manager mirrorB = NULL;
+
+bool maA;
+bool maB;
 
 char cmd_log[LOG_LEN];
 int log_ind = 0;
@@ -37,12 +41,6 @@ char specifiedDirection;
 
 long steps;
 int stepsRec;
-
-int num_updates;
-
-bool man_exists(Manager man) {
-  return &man != NULL;
-}
 
 StepperAxis resolveAxis(char ax) {
   if (ax == 'x') {
@@ -82,7 +80,8 @@ void setup() {
   steps = 0;
   stepsRec = 0;
 
-  num_updates = 0;
+  maA = false;
+  maB = false;
 }
 
 void loop() {
@@ -102,15 +101,16 @@ void loop() {
   }
 
   if (next == 'Q') {
+    Serial.write('x');
     reboot();
   }
 
   if (next == 'F') {
-    if (man_exists(mirrorA)) {
+    if (maA) {
       mirrorA.stop();
     }
 
-    if (man_exists(mirrorB)) {
+    if (maB) {
       mirrorB.stop();
     }
 
@@ -138,7 +138,7 @@ void loop() {
     goto update;
   }
 
-  if (next == 'P') { // adjust this at some point to reflect the value of `moving`
+  if (next == 'P') { // add more possible status options in the future
     char ret;
 
     if (mode == Mode::REGISTERING) {
@@ -158,6 +158,7 @@ void loop() {
     }
 
     Serial.write(ret);
+    goto update;
   }
 
   if (next == 'R' && mode != Mode::REGISTERING) {
@@ -183,26 +184,35 @@ void loop() {
       specifiedAxis = next;
     } else {
       if (next == 'r') {
-        Serial.write('2');
+        bool success = false;
         
         StepperAxis ax = resolveAxis(specifiedAxis);
         if (specifiedMirror == 'A') {
-          if (!man_exists(mirrorA)) {
+          if (!maA) {
             mirrorA = Manager();
+            maA = true;
           }
 
-          mirrorA.registerAxis(ax);
+          success = mirrorA.registerAxis(ax);
         } else if (specifiedMirror == 'B') {
-          if (!man_exists(mirrorB)) {
+          if (!maB) {
             mirrorB = Manager();
+            maB = true;
           }
 
-          mirrorB.registerAxis(ax);
+          success = mirrorB.registerAxis(ax);
         } else { /* we should never get here */ }
+
+        if (success) {
+          Serial.write('2');
+        } else {
+          Serial.write('9');
+        }
 
         specifiedMirror = '0';
         specifiedAxis = '0';
         mode = Mode::RUNNING;
+        goto update;
       }
     }
   }
@@ -244,28 +254,41 @@ void loop() {
     goto update;
   }
 
-  if (mode == Mode::COMMANDING && runningMode == RunningMode::WAITING_FOR_STEPS) {
-    steps += (long) next << (8 * stepsRec++);
-    cmd_to_log = false;
+  if (mode == Mode::COMMANDING && runningMode == RunningMode::WAITING_FOR_STEPS) { // DEBUG THIS: maybe a byte is unknowingly being intercepted?
+    steps |= (long) next << (8 * stepsRec);
+    stepsRec++;
+
+    char buf[10];
+    itoa(steps, buf, 10);
+
+    int ind = 0;
+    while (buf[ind] != '\0') {
+      log_cmd(buf[ind++]);
+    }
+    log_cmd('e');
 
     if (stepsRec == 4) {
-      mode == Mode::RUNNING;
+      mode = Mode::RUNNING;
       runningMode = RunningMode::PASSIVE;
+
+      if (steps & 0x80000000) {
+        steps |= 0xFFFFFFFF00000000;
+      }
 
       steps *= specifiedDirection == 'f' ? 1 : -1;
       StepperAxis ax = resolveAxis(specifiedAxis);
 
       if (specifiedMirror == 'A') {
-        if (!man_exists(mirrorA)) {
+        if (!maA) {
           Serial.write('3');
         } else if (!mirrorA.hasAxis(ax)) {
-          Serial.write('3');
+          Serial.write('4');
         } else {
           mirrorA.moveAxis(ax, steps);
           Serial.write('2');
         }
       } else if (specifiedMirror == 'B') {
-        if (!man_exists(mirrorB)) {
+        if (!maB) {
           Serial.write('3');
         } else if (!mirrorB.hasAxis(ax)) {
           Serial.write('3');
@@ -289,40 +312,50 @@ void loop() {
       cmd_to_log = true;
       next = 'V';
     }
+
+    goto update;
   }
 
   if (next == 'U' && mode == Mode::RUNNING && runningMode == RunningMode::PASSIVE) {
     Serial.write('1');
     runningMode = RunningMode::UNDOING;
+    goto update;
   }
 
   if (runningMode == RunningMode::UNDOING) {
-    if (next == 'A' && man_exists(mirrorA)) {
+    if (next == 'A' && maA) {
       mirrorA.undo();
       Serial.write('2');
-    } else if (next == 'B' && man_exists(mirrorB)) {
+    } else if (next == 'B' && maB) {
       mirrorB.undo();
       Serial.write('2');
     } else {
       Serial.write('3');
     }
+
+    runningMode = RunningMode::PASSIVE;
+    goto update;
   }
 
   if (next == 'T' && mode == Mode::RUNNING && runningMode == RunningMode::PASSIVE) {
     Serial.write('1');
     runningMode = RunningMode::REDOING;
+    goto update;
   }
 
   if (runningMode == RunningMode::REDOING) {
-    if (next == 'A' && man_exists(mirrorA)) {
+    if (next == 'A' && maA) {
       mirrorA.redo();
       Serial.write('2');
-    } else if (next == 'B' && man_exists(mirrorB)) {
+    } else if (next == 'B' && maB) {
       mirrorB.redo();
       Serial.write('2');
     } else {
       Serial.write('3');
     }
+
+    runningMode = RunningMode::PASSIVE;
+    goto update;
   }
 
   if (mode != Mode::SLEEPING && next == 'S') {
@@ -332,11 +365,11 @@ void loop() {
       runningMode = RunningMode::PASSIVE;
       pinMode(ENABLE_PIN, LOW);
       
-      if (man_exists(mirrorA)) {
+      if (maA) {
         mirrorA.stop();
       }
 
-      if (man_exists(mirrorB)) {
+      if (maB) {
         mirrorB.stop();
       }
     } else {
@@ -358,19 +391,14 @@ void loop() {
     }
   }
 
-  if (next == 'j') {
-    Serial.print(num_updates, DEC);
-  }
-
   update:
   bool mA = false;
   bool mB = false;
-  if (man_exists(mirrorA)) {
+  if (maA) {
     mA = mirrorA.update();
-    num_updates += 1;
   }
 
-  if (man_exists(mirrorB)) {
+  if (maB) {
     mB = mirrorB.update();
   }
 
@@ -381,11 +409,14 @@ void loop() {
   }
 
   if (cmd_to_log) {
-    cmd_log[log_ind] = next;
-    log_ind = cor_log_ind(log_ind + 1);
-
+    log_cmd(next);
     cmd_to_log = false;
   }
+}
+
+void log_cmd(char cmd) {
+  cmd_log[log_ind] = cmd;
+  log_ind = cor_log_ind(log_ind + 1);
 }
 
 int cor_log_ind(int ind) {

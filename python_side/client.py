@@ -17,6 +17,9 @@ class RemoteAttributeProxy:
             path, method = '', parts[0]
         
         return self._client.call_method(path, method, *args, **kwargs)
+    
+    def reboot(self):
+        self._client.reboot()
 
 class Client:
     '''
@@ -36,4 +39,7 @@ class Client:
     
     def __call__(self, method, *args, **kwargs):
         return self.client(*args, *kwargs)
+    
+    def reboot(self):
+        self.client.reboot()
 
