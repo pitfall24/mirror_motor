@@ -2,46 +2,51 @@
 #include <avr/wdt.h>
 #include <stdlib.h>
 
-#define ENABLE_PIN 8
+#define ENABLE_PIN 8 // enable pin to begin supplying power to the steppers and CNC shield
 #define LOG_LEN 50
 
-using StepperAxis = MirrorMotor::StepperAxisType;
+using StepperAxis = MirrorMotor::StepperAxisType; // represents a steppers axis
 
 Manager mirrorA = NULL;
 Manager mirrorB = NULL;
 
+// whether or not mirrorA or mirrorB have been created yet, e.g. whether they exist/are not NULL
 bool maA;
 bool maB;
 
+// logging variables
 byte cmd_log[LOG_LEN];
 int log_ind = 0;
 bool cmd_to_log;
 
-typedef enum {
+// these two enums act as a state machine for the whole arduino and its serial communication
+typedef enum { // current operating mode of the arduino (self explanatory names)
   REGISTERING,
   RUNNING,
   COMMANDING,
   SLEEPING,
 } Mode;
 
-typedef enum {
+typedef enum { // more specific running modes (also self explanatory)
   PASSIVE,
-  WAITING_FOR_STEPS,
+  WAITING_FOR_STEPS, // while commanding
   UNDOING,
   REDOING,
 } RunningMode;
 
 Mode mode;
 RunningMode runningMode;
-bool moving;
+bool moving; // whether or not were currently trying to move a stepper
 
 byte specifiedMirror;
 byte specifiedAxis;
 byte specifiedDirection;
 
+// for when were receiving a move command
 long steps;
 int stepsRec;
 
+// convert a transmitted axis character (x, y, z, a) to the axis type
 StepperAxis resolveAxis(byte ax) {
   if (ax == 'x') {
     return StepperAxis::X;
@@ -56,6 +61,7 @@ StepperAxis resolveAxis(byte ax) {
   }
 }
 
+// reboot arduino, resetting all variables and states
 void reboot() {
   wdt_disable();
   wdt_enable(WDTO_15MS);
@@ -63,12 +69,13 @@ void reboot() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(ENABLE_PIN, HIGH);
+  pinMode(ENABLE_PIN, HIGH); // default to allowing current to flow e.g. awake
 
   for (int i = 0; i < LOG_LEN; i++) {
-    cmd_log[i] = 'n';
+    cmd_log[i] = 'n'; // fill log with n's (=nulls?, idk)
   }
   
+  // state prep
   mode = Mode::RUNNING;
   runningMode = RunningMode::PASSIVE;
   moving = false;
@@ -86,20 +93,26 @@ void setup() {
 
 void loop() {
   if (!Serial.available()/* && mode != Mode::SLEEPING // I dont think I need this*/) {
-    goto update;
+    cmd_to_log = false;
+    goto update; // if no commands are coming in just run the steppers as quick as we can
   }
 
   // !!!
   // serial communication parsing here!!
   // !!!
 
-  byte next = Serial.read();
+  // if we expect a char instead we get really weird stuff with converting to valid ASCII values
+  // at least according to my painful debugging
+  byte next = Serial.read(); // we have an incoming command or data value
   cmd_to_log = true;
 
+  // reboot. avoid rebooting if were waiting for steps since certain bytes intended for stepping
+  // can look like 'Q' which would be bad (this is a common patter)
   if (next == 'Q' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     reboot();
   }
 
+  // free all tasks (same byte checks for steps)
   if (next == 'F' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     if (maA) {
       mirrorA.stop();
@@ -125,6 +138,7 @@ void loop() {
     Serial.write('1');
   }
 
+  // send whole log (same checks)
   if (next == 'L' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     for (int i = 0; i < LOG_LEN; i++) {
       Serial.write(cmd_log[cor_log_ind(log_ind + i)]);
@@ -133,6 +147,7 @@ void loop() {
     goto update;
   }
 
+  // send over the current status
   if (next == 'P' && runningMode != RunningMode::WAITING_FOR_STEPS) { // add more possible status options in the future
     byte ret;
 
@@ -156,12 +171,14 @@ void loop() {
     goto update;
   }
 
+  // go into registering mode
   if (next == 'R' && mode != Mode::REGISTERING && runningMode != RunningMode::WAITING_FOR_STEPS) {
     mode = Mode::REGISTERING;
     Serial.write('1');
     goto update;
   }
 
+  // process inputs while registering
   if (mode == Mode::REGISTERING) {
     if (specifiedMirror == '0') {
       if (next != 'A' && next != 'B') {
@@ -212,12 +229,14 @@ void loop() {
     }
   }
 
+  // go into commanding mode
   if (mode == Mode::RUNNING && runningMode == RunningMode::PASSIVE && next == 'C') {
     Serial.write('1');
     mode = Mode::COMMANDING;
     goto update;
   }
 
+  // process inputs and possibly go into WAITING_FOR_STEPS mode if commanding
   if (mode == Mode::COMMANDING && runningMode != RunningMode::WAITING_FOR_STEPS) {
     if (specifiedMirror == '0') {
       if (next != 'A' && next != 'B') {
@@ -249,12 +268,16 @@ void loop() {
     goto update;
   }
 
+  // get 4 bytes required to get number of steps to move a stepper
   if (mode == Mode::COMMANDING && runningMode == RunningMode::WAITING_FOR_STEPS) { // DEBUG THIS: maybe a byte is unknowingly being intercepted?
     steps |= ((long) next) << (8 * stepsRec);
     stepsRec++;
-    log_cmd(next);
     cmd_to_log = false;
 
+    // uncomment this if specific step values are being weird. this sends successive bytes recieved and adds
+    // their "interpretation" (alleged decimal value) to the log. if this is happening read the log frequently
+    /*
+    log_cmd(next);
     byte buf[10];
     itoa(steps, buf, 10);
 
@@ -263,7 +286,9 @@ void loop() {
       log_cmd(buf[ind++]);
     }
     log_cmd('e');
+    */
 
+    // if we've gotten all 4 bytes
     if (stepsRec == 4) {
       mode = Mode::RUNNING;
       runningMode = RunningMode::PASSIVE;
@@ -309,12 +334,14 @@ void loop() {
     goto update;
   }
 
+  // go into undoing mode
   if (next == 'U' && mode == Mode::RUNNING && runningMode == RunningMode::PASSIVE) {
     Serial.write('1');
     runningMode = RunningMode::UNDOING;
     goto update;
   }
 
+  // process inputs and execute undo
   if (runningMode == RunningMode::UNDOING) {
     if (next == 'A' && maA) {
       mirrorA.undo();
@@ -330,12 +357,14 @@ void loop() {
     goto update;
   }
 
+  // redo
   if (next == 'T' && mode == Mode::RUNNING && runningMode == RunningMode::PASSIVE) {
     Serial.write('1');
     runningMode = RunningMode::REDOING;
     goto update;
   }
 
+  // process redo
   if (runningMode == RunningMode::REDOING) {
     if (next == 'A' && maA) {
       mirrorA.redo();
@@ -351,6 +380,7 @@ void loop() {
     goto update;
   }
 
+  // go to sleep zzzzzzzzzz
   if (mode != Mode::SLEEPING && next == 'S') {
     if (runningMode == RunningMode::PASSIVE) {
       Serial.write('1');
@@ -372,6 +402,7 @@ void loop() {
     goto update;
   }
 
+  // wake up
   if (mode == Mode::SLEEPING) {
     if (next != 'W') {
       // do nothing because were asleep
@@ -384,6 +415,7 @@ void loop() {
     }
   }
 
+  // update steppers, certain values, and write to log if applicable
   update:
   bool mA = false;
   bool mB = false;
@@ -407,11 +439,13 @@ void loop() {
   }
 }
 
+// log a cmd/byte
 void log_cmd(byte cmd) {
   cmd_log[log_ind] = cmd;
   log_ind = cor_log_ind(log_ind + 1);
 }
 
+// make sure the log index is correct so that it loops correctly
 int cor_log_ind(int ind) {
   if (ind < 0) {
     return ind + LOG_LEN;

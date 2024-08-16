@@ -6,6 +6,7 @@ from sipyco.pc_rpc import simple_server_loop
 from sipyco import common_args
 from driver import MirrorMotor
 
+# attribute proxy to allow accessing attributes as opposed to just method remotely
 class AttributeProxy:
     def __init__(self, obj):
         self._obj = obj
@@ -79,6 +80,10 @@ def main():
     dev = MirrorMotor(serial_port=args.serial_port, timeout=args.timeout)
     proxy = AttributeProxy(dev)
     
+    # object to expose to client
+    # if you are debugging and really need to you and add `dev` to this with, for example:
+    # '_mirror_motor': dev
+    # and then calling `Client(IP, port, target='_mirror_motor')` on the client side
     objects = {
         'mirror_motor': proxy,
     }

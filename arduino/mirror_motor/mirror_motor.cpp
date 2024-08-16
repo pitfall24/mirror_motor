@@ -15,6 +15,7 @@
 
 using StepperAxis = MirrorMotor::StepperAxisType;
 
+// get the stepping pin corresponding to the given axis
 int getStepPin(StepperAxis axis) {
   switch (axis) {
     case StepperAxis::X: return X_STEP_PIN;
@@ -24,6 +25,7 @@ int getStepPin(StepperAxis axis) {
   }
 }
 
+// get the direction pin corresponding to the given axis
 int getDirPin(StepperAxis axis) {
   switch (axis) {
     case StepperAxis::X: return X_DIR_PIN;
@@ -33,6 +35,7 @@ int getDirPin(StepperAxis axis) {
   }
 }
 
+// make sure a given index is correct to allow looping around the array
 int MirrorMotor::cor_ind(int _ind) {
   if (_ind < 0) {
     return _ind + this->stored_moves;
@@ -41,6 +44,7 @@ int MirrorMotor::cor_ind(int _ind) {
   }
 }
 
+// construct an instance with a given axis
 MirrorMotor::MirrorMotor(StepperAxis axis) {
   this->stepper = AccelStepper(AccelStepper::DRIVER, getStepPin(axis), getDirPin(axis));
 
@@ -61,6 +65,7 @@ void MirrorMotor::setMaxAccel(float accel) {
   this->stepper.setAcceleration(accel);
 }
 
+// move forward (clockwise?) a certain number of steps
 void MirrorMotor::forward(long steps) {
   this->prev_pos[ind] = this->stepper.currentPosition();
   this->ind = (this->ind + 1) % this->stored_moves;
@@ -69,6 +74,7 @@ void MirrorMotor::forward(long steps) {
   this->stepper.move(-steps);
 }
 
+// move backward (counterclockwise?) a certain number of steps
 void MirrorMotor::backward(long steps) {
   this->prev_pos[ind] = this->stepper.currentPosition();
   this->ind = (this->ind + 1) % this->stored_moves;
@@ -81,6 +87,7 @@ void MirrorMotor::stop() {
   this->stepper.stop();
 }
 
+// undo up to 10 past moves
 bool MirrorMotor::undo() {
   if (undoes >= 9 || this->stepper.isRunning()) {
     return false;
@@ -93,6 +100,7 @@ bool MirrorMotor::undo() {
   return true;
 }
 
+// redo all previously undone moves
 bool MirrorMotor::redo() {
   if (undoes == 0 || this->stepper.isRunning()) {
     return false;
@@ -105,6 +113,7 @@ bool MirrorMotor::redo() {
   return true;
 }
 
+// update. returns if the stepper is still running. call this as frequently as possible
 bool MirrorMotor::update() {
   return this->stepper.run();
 }

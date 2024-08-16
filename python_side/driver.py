@@ -54,12 +54,15 @@ class MirrorMotor:
         self.baudrate = baudrate
         self.timeout = timeout
         
+        # serial connection
         self.arduino = serial.Serial(port=self.serial_port, baudrate=self.baudrate, timeout=self.timeout)
         
         self.sleeping = False
         
         print('MirrorMotor instantiated and serial connection made')
     
+    # register an axis
+    # this creates attributes 'A' or 'B' of this class and then 'x', 'y', etc of those to access
     def register(self, mirror, axis):
         if mirror not in ['A', 'B']:
             raise ValueError(f'Variable "mirror" must be "A" or "B", not {mirror}')
@@ -82,6 +85,7 @@ class MirrorMotor:
             
             setattr(self, mirror, mirror_interface)
     
+    # sleep the arduino
     def sleep(self):
         self.write_char('S')
         res, _ = self.wait_for_char('1')
@@ -95,6 +99,7 @@ class MirrorMotor:
         else:
             self.sleeping = True
     
+    # wake it
     def wake(self):
         self.write_char('W')
         res, _ = self.wait_for_char('1')
@@ -108,6 +113,7 @@ class MirrorMotor:
         else:
             self.sleeping = False
     
+    # cancel all todo's
     def cancel_all(self):
         self.write_char('F')
         _, got = self.wait_for_char('1')
@@ -115,12 +121,15 @@ class MirrorMotor:
             print(f'Got {got} from arduino.')
             raise Exception(f'Failed to cancel tasks.')
     
+    # reboot arduino and reset this class
     def reboot(self):
         self.write_char('Q')
         sleep(0.01)
         # we can't really expect it to be able to return anything after this
         # we also have to reset all preconcieved states on this end which is done by the AttributeProxy class
     
+    # get log. prints it nicely if it can (no bytes)
+    # if you change log length on the arduino you must change it here too!!!
     def get_log(self):
         self.write_char('L')
         log = self.read_chars(num=50)
@@ -135,6 +144,7 @@ class MirrorMotor:
         print(res)
         return res
     
+    # get arduino status
     def status(self): # add more status options in the future
         self.write_char('P')
         _, got = self.wait_for_char('1')
@@ -156,6 +166,7 @@ class MirrorMotor:
         print(stat)
         return got, stat
     
+    # read num characters, or as many as you can if None, from the serial connection
     def read_chars(self, num=None):
         rec = []
         
@@ -175,12 +186,15 @@ class MirrorMotor:
         
         return rec
     
+    # write an encoded character
     def write_char(self, char):
         self.arduino.write(f'{char}'.encode())
     
+    # write a number (signed, little endian) as 4 bytes to the serial connection
     def write_num(self, num):
         self.arduino.write(num.to_bytes(4, 'little', signed=True))
     
+    # wait for a specific char. if not matched returns false and what it actually got
     def wait_for_char(self, char):
         start = monotonic()
         
@@ -202,6 +216,7 @@ class MirrorMotor:
 class MirrorInterface:
     '''
     Class which has methods for whole-mirror controls
+    Such as when you call `mirror_motor.A.undo()` or something
     '''
     
     def __init__(self, mm_instance, axis):
@@ -278,6 +293,7 @@ class MirrorInterface:
 class AxisObject:
     '''
     Controls a given axis of a specific mirror
+    Such as when you call `mirror_motor.A.x.move('f', 1200)`
     '''
     
     def __init__(self, mm_instance, mirror, axis):
@@ -347,6 +363,7 @@ class AxisObject:
             print(f'Got {got} from arduino.')
             raise Exception(f'Failed to send {steps} steps to axis {self.axis} on mirror {self.mirror}.')
     
+    # identical for the wait_for_char() in the MirrorMotor class, here just for convenience
     def wait_for_char(self, char):
         start = monotonic()
         

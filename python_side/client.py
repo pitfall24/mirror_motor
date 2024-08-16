@@ -1,5 +1,7 @@
 from sipyco.pc_rpc import Client as SiPyCoClient
 
+# class to handle accessing attributes on a MirrorMotor instance remotely
+# remote since this is called from a client remotely connecting to the server
 class RemoteAttributeProxy:
     def __init__(self, client, base_path=''):
         self._client = client
@@ -21,6 +23,7 @@ class RemoteAttributeProxy:
     def reboot(self):
         self._client.reboot()
 
+# interface so the user doesnt have to wrap sipyco.pr_rpc.Client on their own
 class Client:
     '''
     Equivalent to writing:

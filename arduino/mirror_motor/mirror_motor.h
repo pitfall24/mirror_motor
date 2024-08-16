@@ -4,7 +4,7 @@ class MirrorMotor {
 
 public:
   
-  typedef enum {
+  typedef enum { // represents a steppers axis
     X,
     Y,
     Z,

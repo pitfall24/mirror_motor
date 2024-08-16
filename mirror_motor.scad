@@ -251,14 +251,12 @@ module mechanism_mount() {
 
 //motor_holder(securing_ring_tol = 0.1, screw_tol = 0.1);
 
-//import_mirror(convexity = 1);
+import_mirror();
 
-mirror([0, 0, 0]) {
-    _render("red") mount();
-    mechanism_mount();
-}
+_render("red") mount();
+mechanism_mount();
 
-//mechanism(tol_boxes = false);
+mechanism();
 
 
 
