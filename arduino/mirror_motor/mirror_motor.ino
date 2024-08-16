@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define ENABLE_PIN 8
-#define LOG_LEN 25
+#define LOG_LEN 50
 
 using StepperAxis = MirrorMotor::StepperAxisType;
 
@@ -13,7 +13,7 @@ Manager mirrorB = NULL;
 bool maA;
 bool maB;
 
-char cmd_log[LOG_LEN];
+byte cmd_log[LOG_LEN];
 int log_ind = 0;
 bool cmd_to_log;
 
@@ -35,14 +35,14 @@ Mode mode;
 RunningMode runningMode;
 bool moving;
 
-char specifiedMirror;
-char specifiedAxis;
-char specifiedDirection;
+byte specifiedMirror;
+byte specifiedAxis;
+byte specifiedDirection;
 
 long steps;
 int stepsRec;
 
-StepperAxis resolveAxis(char ax) {
+StepperAxis resolveAxis(byte ax) {
   if (ax == 'x') {
     return StepperAxis::X;
   } else if (ax == 'y') {
@@ -93,19 +93,14 @@ void loop() {
   // serial communication parsing here!!
   // !!!
 
-  char next = Serial.read();
-  if (next == -1) {
-    goto update;
-  } else {
-    cmd_to_log = true;
-  }
+  byte next = Serial.read();
+  cmd_to_log = true;
 
-  if (next == 'Q') {
-    Serial.write('x');
+  if (next == 'Q' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     reboot();
   }
 
-  if (next == 'F') {
+  if (next == 'F' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     if (maA) {
       mirrorA.stop();
     }
@@ -130,7 +125,7 @@ void loop() {
     Serial.write('1');
   }
 
-  if (next == 'L') {
+  if (next == 'L' && runningMode != RunningMode::WAITING_FOR_STEPS) {
     for (int i = 0; i < LOG_LEN; i++) {
       Serial.write(cmd_log[cor_log_ind(log_ind + i)]);
     }
@@ -138,8 +133,8 @@ void loop() {
     goto update;
   }
 
-  if (next == 'P') { // add more possible status options in the future
-    char ret;
+  if (next == 'P' && runningMode != RunningMode::WAITING_FOR_STEPS) { // add more possible status options in the future
+    byte ret;
 
     if (mode == Mode::REGISTERING) {
       ret = '4';
@@ -161,7 +156,7 @@ void loop() {
     goto update;
   }
 
-  if (next == 'R' && mode != Mode::REGISTERING) {
+  if (next == 'R' && mode != Mode::REGISTERING && runningMode != RunningMode::WAITING_FOR_STEPS) {
     mode = Mode::REGISTERING;
     Serial.write('1');
     goto update;
@@ -255,14 +250,16 @@ void loop() {
   }
 
   if (mode == Mode::COMMANDING && runningMode == RunningMode::WAITING_FOR_STEPS) { // DEBUG THIS: maybe a byte is unknowingly being intercepted?
-    steps |= (long) next << (8 * stepsRec);
+    steps |= ((long) next) << (8 * stepsRec);
     stepsRec++;
+    log_cmd(next);
+    cmd_to_log = false;
 
-    char buf[10];
+    byte buf[10];
     itoa(steps, buf, 10);
 
     int ind = 0;
-    while (buf[ind] != '\0') {
+    while (buf[ind] != '\0' && ind < 10) {
       log_cmd(buf[ind++]);
     }
     log_cmd('e');
@@ -270,10 +267,6 @@ void loop() {
     if (stepsRec == 4) {
       mode = Mode::RUNNING;
       runningMode = RunningMode::PASSIVE;
-
-      if (steps & 0x80000000) {
-        steps |= 0xFFFFFFFF00000000;
-      }
 
       steps *= specifiedDirection == 'f' ? 1 : -1;
       StepperAxis ax = resolveAxis(specifiedAxis);
@@ -414,7 +407,7 @@ void loop() {
   }
 }
 
-void log_cmd(char cmd) {
+void log_cmd(byte cmd) {
   cmd_log[log_ind] = cmd;
   log_ind = cor_log_ind(log_ind + 1);
 }

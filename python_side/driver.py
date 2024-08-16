@@ -123,9 +123,14 @@ class MirrorMotor:
     
     def get_log(self):
         self.write_char('L')
-        log = self.read_chars(num=25)
+        log = self.read_chars(num=50)
         
-        res = f'Log (most recent LAST) (length {len(log)}): {log}.'
+        try:
+            s = ' '.join(''.join(log[i:i + 5]) for i in range(0, len(log), 5))
+        except TypeError:
+            s = log
+        
+        res = f'Log (most recent LAST) (length {len(log)}): {s}.'
         
         print(res)
         return res
