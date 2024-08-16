@@ -15,12 +15,20 @@
 #define A_DIR_PIN 13
 
 AccelStepper xStepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
-//AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+AccelStepper yStepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
 //AccelStepper zStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
 //AccelStepper aStepper(AccelStepper::DRIVER, A_STEP_PIN, A_DIR_PIN);
 
-int maxSpeed = 30;
-int maxAccel = 300;
+AccelStepper* steppers[] = {&xStepper, &yStepper};
+char labels[] = {'x', 'y'};
+
+int maxSpeed = 600; // 1 rev / s
+int maxAccel = 5000;
+
+int xTarg = 1200; // 1.5 rotations
+int yTarg = 800; // 1 rotation
+
+int num_updates;
 
 void setup() {
   Serial.begin(115200);
@@ -30,24 +38,29 @@ void setup() {
   xStepper.setMaxSpeed(maxSpeed);
   xStepper.setAcceleration(maxAccel);
 
-  //yStepper.setMaxSpeed(maxSpeed);
-  //yStepper.setAcceleration(maxAccel);
+  yStepper.setMaxSpeed(maxSpeed);
+  yStepper.setAcceleration(maxAccel);
 
   //zStepper.setMaxSpeed(maxSpeed);
   //zStepper.setAcceleration(maxAccel);
 
   //aStepper.setMaxSpeed(maxSpeed);
   //aStepper.setAcceleration(maxAccel);
+
+  xStepper.moveTo(xTarg);
+  yStepper.moveTo(yTarg);
 }
 
 void loop() {
-  Serial.write("Going to 40\n");
+  for (int i = 0; i < sizeof(steppers) / sizeof(steppers[0]); i++) {
+    AccelStepper* stepper = steppers[i];
+    char name = labels[i];
 
-  xStepper.moveTo(120);
-  xStepper.runToPosition();
+    if (stepper->distanceToGo() == 0) {
+      stepper->moveTo(stepper->currentPosition() == 0 ? (name == 'x' ? xTarg : yTarg) : 0);
+    }
+  }
 
-  Serial.write("Going to 0\n");
-
-  xStepper.moveTo(0);
-  xStepper.runToPosition();
+  xStepper.run();
+  yStepper.run();
 }

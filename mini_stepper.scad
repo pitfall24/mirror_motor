@@ -1,36 +1,42 @@
 //
 // mini stepper motor
-// (https://www.amazon.com/Abovehill-Stepper-2-Phase-4-Wire-Connection/dp/B08346RFVZ/ref=pd_bxgy_d_sccl_1/136-7700863-2406023?pd_rd_w=IDu0U&content-id=amzn1.sym.c51e3ad7-b551-4b1a-b43c-3cf69addb649&pf_rd_p=c51e3ad7-b551-4b1a-b43c-3cf69addb649&pf_rd_r=NNP239HPWDPKZRQ4SN6C&pd_rd_wg=J23e9&pd_rd_r=8c85098f-a1b3-4aa4-8d58-038ba692a794&pd_rd_i=B08346RFVZ&psc=1)
+// https://www.pololu.com/product/1204/resources
 //
 
 $fs = 0.1;
+$fn = 64;
 
-use<gears.scad>;
+use<util.scad>;
 
-module mini_stepper(tol_boxes = false) {
-    color("silver") difference() {
-        union() {
-            cylinder(d = 8, h = 8.3);
-            translate([0, 0, 3.35]) cylinder(d = 8.36, h = 1.3);
-            translate([3.2, 0, 7.3]) cylinder(d = 2.54, h = 1);
-            translate([-3.2, 0, 7.3]) cylinder(d = 2.54, h = 1);
-        }
+module mini_stepper(main_ax_tol = 0, securing_ring_tol = 0, len_tol = 0.75, tol_boxes = false) {
+    _render("dimgray") translate([-10, -30, -10]) if (tol_boxes) { // body
+        cube([20, 30, 20]);
+    } else {
+        beveled_cube([20, 30, 20], [0, 1, 0], 0.106);
+    }
+    _render("darkgray") translate([0, -0.1, 0]) rotate([-90, 0, 0]) cylinder(d = 15 + securing_ring_tol, h = 1.6 + securing_ring_tol / 2); // securing ring
+    
+    _render("silver", false) difference() { // main axle
+        translate([0, 1.4, 0]) rotate([-90, 0, 0]) cylinder(d = 4 + main_ax_tol, h = 13.6 + main_ax_tol / 2 + (tol_boxes ? len_tol : 0));
         
-        if (!tol_boxes) union() {
-            translate([3, 0, 6]) cylinder(d = 1, h = 3);
-            translate([-3, 0, 6]) cylinder(d = 1, h = 3);
-            translate([0, -3, 6]) cylinder(d = 1, h = 3);
+        if (!tol_boxes) {
+            translate([-3, 3, -3 - main_ax_tol / 2]) cube([6, 12.1, 1.5]); // flat face
+            
+            difference() { // end taper
+                translate([0, 13.6 + main_ax_tol / sqrt(8), 0]) rotate([-90, 0, 0]) cylinder(d = 6, h = 4);
+                translate([0, 13.5 + main_ax_tol / sqrt(8), 0]) rotate([-90, 0, 0]) cylinder(d1 = 6, d2 = 0, h = 3);
+            }
+            
+            translate([0, 14, 0]) rotate([-90, 0, 0]) cylinder(d = 1.25, h = 2); // end hole
         }
     }
     
-    translate([0, 0, 8.3]) {
-        translate([0, 0, -0.05]) cylinder(d = 4, h = 1.65); // height is 1mm too high for tolerance
-        color("silver") cylinder(d = 1.5, h = 3.99);
-        if (!tol_boxes) translate([0, 0, 4 - 1.5]) spur_gear(modul = 2.05 / 9, tooth_number = 9, width = 1.5, bore = 0.8, optimized = false);
-        if (tol_boxes) color("orange") translate([0, 0, 4 - 1.5]) cylinder(d = 2.4, h = 1.5);
-    }
-    
-    color("green") if (!tol_boxes) rotate([0, 0, 35]) translate([-5, 0, 2]) cube([2.5, 5, 4], center = true);
+    if (tol_boxes) _render("orange") translate([9.9, -31, -6]) cube([3, 10, 12]); // connector
 }
 
-mini_stepper(tol_boxes = false);
+module import_mini_stepper(convexity = 1) {
+    import("./stepper_motor.stl", convexity = convexity);
+}
+
+mini_stepper(main_ax_tol = 0, tol_boxes = false);
+//import_mini_stepper();
